@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src = "js/game.js"></script>
+    <script src = "js/physicspane.js"></script>
+  </head>
+    <body onload="game(); physpane();">
+      <div id = "center-body">
+        <h1 class = "nontrans">
+          The Physics of Ninjas
+        </h1>
+        <div class = "nontrans" id="name">
+          Ryan Stonebraker
+        </div>
+        <div id="gameHolder">
+          <canvas id = "gameCanvas" width = "400" height = "250">
+            Your browser doesn't support the HTML5 Canvas.
+          </canvas>
+          <canvas id = "physicsCanvas" width = "400" height = "150">
+            Your browser doesn't support the HTML5 Canvas.
+          </canvas>
+        </div>
+          <div class = "nontrans" id = "Instructions-holder">
+            <h2> Instructions: </h2>
+              <p>
+                The game works with a series of levels. At the top of the screen
+                is the current objective of <br> the ninja and at the bottom is
+                an explanation of the physics currently taking place. If the <br>
+                current objective is completed, the ninja will move on to the
+                next level. If the level is <br> failed, it will restart. Keys
+                used to control the ninja will vary on each level and will be <br>
+                displayed with the objective.
+              </p>
+          </div>
+      </div>
+    </body>
+</html>

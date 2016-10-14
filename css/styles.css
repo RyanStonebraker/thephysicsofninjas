@@ -1,0 +1,92 @@
+html, body {
+  background-color: lightgray;
+  background: repeating-linear-gradient(
+    -45deg,
+    gray,
+    gray 2px,
+    lightgray 2px,
+    lightgray 20px
+  );
+  background-attachment: fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-bacgkround-size: cover;
+  background-size: cover;
+}
+
+.nontrans {
+  background: rgb(160, 215, 255);
+}
+
+h1 {
+  font-size: 30px;
+  font-family: fantasy;
+  border: 1px solid black;
+  word-spacing: 10px;
+  letter-spacing: 10px;
+  width:fit-content;
+  width:-webkit-fit-content;
+  width:-moz-fit-content;
+  padding: 5px;
+  margin:auto;
+  text-align: center;
+}
+
+#name {
+  font-size: 15px;
+  font-family: fantasy;
+  border: 1px solid black;
+  width:fit-content;
+  width:-webkit-fit-content;
+  width:-moz-fit-content;
+  padding-left: 2px;
+  padding-right: 2px;
+  margin-left: 60%;
+}
+
+#center-body {
+  width: fit-content;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  margin:auto;
+  padding: 5px;
+  border: 1px solid black;
+  background: rgba(100, 175, 255, 0.9);
+}
+
+#gameHolder {
+  height: 400px;
+  width: 400px;
+  border: 1px solid black;
+  margin-top: 2px;
+  margin-right: auto;
+  margin-left: auto;
+  line-height: 0;
+}
+
+#Instructions-holder {
+  margin-top: 5px;
+  border: 1px solid black;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 5px;
+  width: fit-content;
+  width: -webkit-fit-content;
+  width: -moz-fit-content;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+h2 {
+  font-family: cursive;
+  text-align: center;
+  text-decoration: underline;
+}
+
+p {
+  font-color: #000000;
+  font-size: 12px;
+  font-family: Times;
+  line-height: normal;
+  text-align: center;
+}
