@@ -3,18 +3,18 @@
 // 10/13/2016
 // Pane displaying relevant physics occuring onscreen
 
-var ctx;
-var canvas;
+var context;
+var cvs;
 
 function physpane ()
 {
-  var canvas = document.getElementById("physicsCanvas");
-  if (canvas.getContext)
+  var cvs = document.getElementById("physicsCanvas");
+  if (cvs.getContext)
   {
-    ctx = canvas.getContext("2d");
+    context = cvs.getContext("2d");
 
-    ctx.fillStyle = "gray";
+    context.fillStyle = "gray";
 
-    ctx.fillRect(0, 0, 400, 150);
+    context.fillRect(0, 0, 400, 150);
   }
 }
