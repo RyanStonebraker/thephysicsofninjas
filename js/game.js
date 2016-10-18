@@ -6,10 +6,16 @@
 var ctx;
 var canvas;
 
-var setup = {
+var game = {
   "width" : 400,
   "height" : 250,
-  "fps" : 30
+  "fps" : 50,
+  "level" : 1,
+  "applyTime" : 0,
+  "counter" : 0,
+  get secTime () {
+    return this.counter/1000;
+  }
 }
 
 var key = {
@@ -24,9 +30,19 @@ var ninja = {
   "img" : new Image (),
   "height" : 100,
   "width" : 77,
+  "mass" : 100,
+  "multiplier" : 0,
+  "gravityConst" : 0,
+  "angle" : 0,
+  "applied_force" : 0,
+  "contact" : true,
+  get rads ()
+  {
+    return this.angle * Math.PI/180;
+  },
   "position" : {
-    "x" : setup.width/2 - 77/2,
-    "y" : setup.height - 100
+    "x" : 0,
+    "y" : 0
   },
   "velocity" : {
     "x" : 0,
@@ -35,11 +51,19 @@ var ninja = {
   "acceleration" : {
     "x" : 0,
     "y" : 0
+  },
+  "net_force" : {
+    "x" : 0,
+    "y" : 0
   }
 }
+// start position at center bottom
+ninja.position.x = game.width/2 - ninja.width/2;
+ninja.position.y = game.height - ninja.height;
+
 ninja.img.src = "img/ninja.svg";
 
-function game ()
+function mainGame ()
 {
   canvas = document.getElementById("gameCanvas");
 
@@ -47,7 +71,7 @@ function game ()
   {
     ctx = canvas.getContext("2d");
     ctx.fillStyle= "white";
-    ctx.fillRect(0, 0, setup.width, setup.height);
+    ctx.fillRect(0, 0, game.width, game.height);
   }
 
   makeNinja (ninja.position.x, ninja.position.y);
@@ -59,29 +83,41 @@ function game ()
 
 function makeNinja (x, y)
 {
-  ctx.fillRect (0, 0, setup.width, setup.height);
+  ctx.fillRect (0, 0, game.width, game.height);
   ctx.drawImage(ninja.img, x, y);
-}
-
-function physics ()
-{
-  // TODO implement velocity and acceleration
-  gravity ();
-}
-
-function gravity ()
-{
-  if (ninja.position.y < 150)
-  {
-    ninja.position.y += setup.fps/10;
-  }
 }
 
 function refresh ()
 {
-  setTimeout(function() {requestAnimationFrame(refresh);}, 1000/setup.fps)
-  physics ();
+  setTimeout(function() {requestAnimationFrame(refresh);}, 1000/game.fps);
+
+
+  switch (game.level)
+  {
+    case 1:
+      arena1 (ninja, game.secTime);
+
+      break;
+  }
+
+  move (ninja, game.secTime);
+
   makeNinja(ninja.position.x, ninja.position.y);
+  physpane();
+
+  if (ninja.position.y = game.height - ninja.height)
+    ninja.contact = true;
+  else if (ninja.position.y < game.height - ninja.height)
+    ninja.contact = false;
+
+  if (game.counter >= game.applyTime/(1000/game.fps))
+    game.counter -= game.applyTime/(1000/game.fps);
+  else if (game.counter < game.applyTime/(1000/game.fps) && game.counter >= 0)
+  {
+    game.counter = 0;
+    ninja.applied_force = 0;
+  }
+  console.log("Y Force" + ninja.net_force.y);
 }
 
 function keys (evt)
@@ -96,7 +132,12 @@ function keys (evt)
       ninja.position.x += 30;
       break;
     case key.space:
-      ninja.position.y -= 30;
+      if (ninja.position.y == (game.height - ninja.height))
+        {
+          game.applyTime = 1000;
+          game.counter = 1000;
+          ninja.applied_force = ninja.multiplier*ninja.mass*ninja.gravityConst;
+        }
       evt.preventDefault();
       break;
   }
