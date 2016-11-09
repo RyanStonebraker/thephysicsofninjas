@@ -44,16 +44,13 @@ function move (object, time)
 function arena1 (object)
 {
   object.multiplier = 2; // jumping multiplier
-  object.gravityConst = 10; // acceleration due to gravity on earth
+  object.gravityConst = 9.81; // acceleration due to gravity on earth
 
   var force1 = gravity(object); // add gravity force
   var force2 = 0;
   if (object.contact == true)
     force2 = normal(object); // add normal force if in contact w/something
   netforceY = -(force1 + force2);
-
-    console.log("Gravity: " + force1);
-    console.log("Normal: " + force2);
 
 
   object.net_force.y = netforceY; // add forces together

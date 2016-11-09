@@ -89,3 +89,38 @@ p {
   line-height: normal;
   text-align: center;
 }
+
+#tabBar {
+  padding-bottom: 5%;
+}
+
+.tabButton {
+  text-align: center;
+  font-family: Times;
+  font-size: 15px;
+  text-decoration: none;
+  background-color: lightblue;
+  border-radius: 10px;
+  border: 2px solid gray;
+  width: 24%;
+  transition-duration: 0.2s;
+  -webkit-transition-duration: 0.2s;
+  float: left;
+}
+
+.tabButton:link {
+  color: currentColor;
+}
+
+.tabButton:visited {
+  color: currentColor;
+}
+
+.tabButton:hover {
+  font-weight: bold;
+  background-color: #008CBA;
+}
+
+.tabButton:active {
+  color: white;
+}
