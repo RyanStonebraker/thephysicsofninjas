@@ -1,10 +1,13 @@
 // game.js
 // Ryan Stonebraker
-// 10/13/2016
+// Created: 10/13/2016
+// Last Updated: 11/10/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
-var ctx;
-var canvas;
+var nCtx;
+var bgCtx;
+var ninjacanvas;
+var bgcanvas;
 
 var game = {
   "width" : 400,
@@ -19,11 +22,11 @@ var game = {
 }
 
 var key = {
-  "up" : 38,
-  "down" : 40,
-  "left" : 37,
-  "right" : 39,
-  "space" : 32
+  "up" : "W".charCodeAt(),
+  "down" : "S".charCodeAt(),
+  "left" : "A".charCodeAt(),
+  "right" : "D".charCodeAt(),
+  "space" : " ".charCodeAt()
 }
 
 var ninja = {
@@ -63,33 +66,43 @@ ninja.position.y = game.height - ninja.height;
 
 ninja.img.src = "img/ninja.svg";
 
-function mainGame ()
+function screen (ninjadiv, bgdiv)
 {
-  canvas = document.getElementById("gameCanvas");
+  if (!ninjadiv)
+    return null;
 
-  if (canvas.getContext)
+  this.ninjaCanvas = ninjadiv;
+  this.bgCanvas = bgdiv;
+
+  ninjacanvas = this.ninjaCanvas;
+  bgcanvas = this.bgCanvas;
+
+  if (ninjacanvas.getContext)
   {
-    ctx = canvas.getContext("2d");
-    ctx.fillStyle= "white";
-    ctx.fillRect(0, 0, game.width, game.height);
+    nCtx = ninjacanvas.getContext("2d");
+    //bgCtx = bgcanvas.getContext("2d");
+
+    nCtx.fillStyle= "white";
+    nCtx.fillRect(0, 0, game.width, game.height);
   }
 
-  makeNinja (ninja.position.x, ninja.position.y);
+  this.makeNinja (ninja.position.x, ninja.position.y);
 
-  refresh ();
+  this.refresh ();
 
-  window.addEventListener('keydown', keys, true);
+  window.addEventListener('keydown', this.keys.bind(this), true);
 }
 
-function makeNinja (x, y)
+screen.prototype.makeNinja = function (x, y)
 {
-  ctx.fillRect (0, 0, game.width, game.height);
-  ctx.drawImage(ninja.img, x, y);
+  nCtx.fillRect (0, 0, game.width, game.height);
+  nCtx.drawImage(ninja.img, x, y);
 }
 
-function refresh ()
+screen.prototype.refresh = function ()
 {
-  setTimeout(function() {requestAnimationFrame(refresh);}, 1000/game.fps);
+  var self = this;
+  setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
 
 
   switch (game.level)
@@ -102,7 +115,7 @@ function refresh ()
 
   move (ninja, game.secTime);
 
-  makeNinja(ninja.position.x, ninja.position.y);
+  this.makeNinja(ninja.position.x, ninja.position.y);
   physpane();
 
   if (ninja.position.y = game.height - ninja.height)
@@ -117,14 +130,12 @@ function refresh ()
     game.counter = 0;
     ninja.applied_force = 0;
   }
-  console.log("Y Force" + ninja.net_force.y);
 }
 
-function keys (evt)
+screen.prototype.keys = function (evt)
 {
   switch (evt.keyCode)
   {
-    // TODO make upwards motion more fluid with setTimeout/requestAnimationFrame
     case key.left:
       ninja.position.x -= 30;
       break;
