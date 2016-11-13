@@ -13,12 +13,7 @@ var game = {
   "width" : 400,
   "height" : 250,
   "fps" : 50,
-  "level" : 1,
-  "applyTime" : 0,
-  "counter" : 0,
-  get secTime () {
-    return this.counter/1000;
-  }
+  "level" : 1
 }
 
 var key = {
@@ -29,42 +24,17 @@ var key = {
   "space" : " ".charCodeAt()
 }
 
-var ninja = {
-  "img" : new Image (),
-  "height" : 100,
-  "width" : 77,
-  "mass" : 100,
-  "multiplier" : 0,
-  "gravityConst" : 0,
-  "angle" : 0,
-  "applied_force" : 0,
-  "contact" : true,
-  get rads ()
-  {
-    return this.angle * Math.PI/180;
+var _ninja = {
+  img : {
+    std : "img/ninja.svg"
   },
-  "position" : {
-    "x" : 0,
-    "y" : 0
-  },
-  "velocity" : {
-    "x" : 0,
-    "y" : 0
-  },
-  "acceleration" : {
-    "x" : 0,
-    "y" : 0
-  },
-  "net_force" : {
-    "x" : 0,
-    "y" : 0
-  }
-}
-// start position at center bottom
-ninja.position.x = game.width/2 - ninja.width/2;
-ninja.position.y = game.height - ninja.height;
+  width : 77,
+  height : 100
+};
 
-ninja.img.src = "img/ninja.svg";
+var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
+ninja.xPos = game.width/2 - _ninja.width/2;
+ninja.yPos = game.height - _ninja.height;
 
 function screen (ninjadiv, bgdiv)
 {
@@ -73,6 +43,7 @@ function screen (ninjadiv, bgdiv)
 
   this.ninjaCanvas = ninjadiv;
   this.bgCanvas = bgdiv;
+  // TODO make background canvas
 
   ninjacanvas = this.ninjaCanvas;
   bgcanvas = this.bgCanvas;
@@ -86,7 +57,7 @@ function screen (ninjadiv, bgdiv)
     nCtx.fillRect(0, 0, game.width, game.height);
   }
 
-  this.makeNinja (ninja.position.x, ninja.position.y);
+  this.makeNinja (ninja.xPos, ninja.yPos);
 
   this.refresh ();
 
@@ -99,37 +70,48 @@ screen.prototype.makeNinja = function (x, y)
   nCtx.drawImage(ninja.img, x, y);
 }
 
+// TODO use arena1 prototype to add arena1 bg, special props
+// TODO remove fake ground detection when collision detection is implemented
+var triggered = false;
+var gTrig = false;
+screen.prototype.arena1 = function ()
+{
+  if (ninja.bL.y >= game.height && triggered == true)
+  {
+    ninja.acceleration.y = 0;
+    ninja.velocity.y = 0;
+    ninja.yMid = game.height - ninja.height/2;
+    triggered = false;
+  }
+  if (ninja.bL.y < game.height)
+  {
+    console.log("Above ground");
+    if (!gTrig || ninja.acceleration.y == 0)
+    {
+      ninja.acceleration.y += 100;
+      gTrig = true;
+    }
+    triggered = true;
+    console.log (triggered);
+  }
+
+}
+
 screen.prototype.refresh = function ()
 {
   var self = this;
   setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
 
-
   switch (game.level)
   {
     case 1:
-      arena1 (ninja, game.secTime);
-
+      this.arena1();
       break;
   }
+  kinematic (ninja, game.fps);
 
-  move (ninja, game.secTime);
-
-  this.makeNinja(ninja.position.x, ninja.position.y);
+  this.makeNinja(ninja.xPos, ninja.yPos);
   physpane();
-
-  if (ninja.position.y = game.height - ninja.height)
-    ninja.contact = true;
-  else if (ninja.position.y < game.height - ninja.height)
-    ninja.contact = false;
-
-  if (game.counter >= game.applyTime/(1000/game.fps))
-    game.counter -= game.applyTime/(1000/game.fps);
-  else if (game.counter < game.applyTime/(1000/game.fps) && game.counter >= 0)
-  {
-    game.counter = 0;
-    ninja.applied_force = 0;
-  }
 }
 
 screen.prototype.keys = function (evt)
@@ -137,18 +119,13 @@ screen.prototype.keys = function (evt)
   switch (evt.keyCode)
   {
     case key.left:
-      ninja.position.x -= 30;
+      ninja.xPos -= 30;
       break;
     case key.right:
-      ninja.position.x += 30;
+      ninja.xPos += 30;
       break;
     case key.space:
-      if (ninja.position.y == (game.height - ninja.height))
-        {
-          game.applyTime = 1000;
-          game.counter = 1000;
-          ninja.applied_force = ninja.multiplier*ninja.mass*ninja.gravityConst;
-        }
+      ninja.velocity.y += -50;
       evt.preventDefault();
       break;
   }
