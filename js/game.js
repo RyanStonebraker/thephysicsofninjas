@@ -54,36 +54,42 @@ function screen (ninjadiv, bgdiv)
     nCtx = ninjacanvas.getContext("2d");
     //bgCtx = bgcanvas.getContext("2d");
 
-    nCtx.fillStyle= "white";
-    nCtx.fillRect(0, 0, game.width, game.height);
+    nCtx.clearRect(0, 0, game.width, game.height);
   }
 
-  this.makeNinja (ninja.xPos, ninja.yPos);
+  this.drawObject (ninja);
 
   this.refresh ();
 
   window.addEventListener('keydown', this.keys.bind(this), true);
 }
 
-screen.prototype.makeNinja = function (x, y)
+screen.prototype.drawObject = function (obj, offsetX, offsetY)
 {
-  nCtx.fillRect (0, 0, game.width, game.height);
-  nCtx.drawImage(ninja.img, x, y);
+  if (!offsetX)
+    offsetX = 0;
+  if (!offsetY)
+    offsetY = 0;
+  //nCtx.fillRect (0, 0, game.width, game.height);
+  nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
 }
 
 // TODO use arena1 prototype to add arena1 bg, special props
 screen.prototype.arena1 = function ()
 {
 
-    var _building1 = new object(0, 3*game.width/8, 100);
-    _building1.yPos = game.height;
+    var _building1 = new object("img/building1.svg", 490, 179);
+    _building1.yPos = game.height - 100;
+    _building1.xPos = -300;
 
-    ninja.elasticity = 0.3;
+    this.drawObject (_building1, 0, -15);
+
+    ninja.elasticity = 0.1;
 
   //  if (!ninja.velocity.y)
   //    game.spacePressed = 0;
 
-    ninja.acceleration.y = 9.81;
+    ninja.acceleration.y = 15;
     kinematic.prototype.detectCollision (ninja, _building1, game.fps);
 }
 
@@ -91,6 +97,8 @@ screen.prototype.refresh = function ()
 {
   var self = this;
   setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
+
+  nCtx.clearRect(0, 0, game.width, game.height);
 
   switch (game.level)
   {
@@ -100,8 +108,7 @@ screen.prototype.refresh = function ()
   }
   kinematic (ninja, game.fps);
 
-
-  this.makeNinja(ninja.xPos, ninja.yPos);
+  this.drawObject(ninja);
   physpane();
 }
 
@@ -110,16 +117,18 @@ screen.prototype.keys = function (evt)
   switch (evt.keyCode)
   {
     case key.left:
-      ninja.xPos -= 30;
+      ninja.velocity.y -= 3;
+      ninja.velocity.x -= 10;
       break;
     case key.right:
-      ninja.xPos += 30;
+      ninja.velocity.y -= 3;
+      ninja.velocity.x += 10;
       break;
     case key.space:
       //if(game.spacePressed < 2)
     //  {
       //  ++game.spacePressed;
-        ninja.velocity.y += -20;
+        ninja.velocity.y = -20;
     //  }
       evt.preventDefault();
       break;
