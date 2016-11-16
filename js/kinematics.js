@@ -66,6 +66,7 @@ var object = function (imgSrc, width, height) {
   prop.acceleration = {x: 0, y: 0};
   prop.aTimeLeft = -1; // -1 to keep accelerating until something changes
   prop.contact = false;
+  prop.interact = 3;
 }
 
 function kinematic (objA, fps)
@@ -116,75 +117,60 @@ kinematic.prototype.moveObj = function (object, _perUpdate)
 kinematic.prototype.detectCollision = function (obj1, obj2, fps)
 {
   _perUpdate = fps/1000;
-  // if obj1's top Left x is between obj2's top Left x and top Right x
-  var tLx;
-  var tRx;
-  var bLx;
-  var bRx;
 
-  var tLy;
-  var tRy;
-  var bLy;
-  var bRy;
+  // no rotation bounds
+  var rightSide = (obj1.tR.x >= obj2.tL.x && obj1.tR.x <= obj2.tR.x);
+  var top = (obj1.tR.y <= obj2.bR.y && obj1.tR.y >= obj2.tR.y);
+  var leftSide = (obj1.tL.x <= obj2.tR.x && obj2.tL.x >= obj2.tL.x);
+  var bottom = (obj1.bR.y >= obj2.tR.y && obj1.bR.y <= obj2.bR.y);
 
-  if (obj2.tL.x <= obj2.tR.x)
+  // 0 = rightSide, 1 = top, 2 = leftSide, 3 = bottom
+  if ((rightSide || leftSide) && (top || bottom))
   {
-    tLx = (obj1.tL.x >= obj2.tL.x && obj1.tL.x <= obj2.tR.x);
-    tRx = (obj1.tR.x >= obj2.tL.x && obj1.tR.x <= obj2.tR.x);
-    bLx = (obj1.bL.x >= obj2.tL.x && obj1.bL.x <= obj2.tR.x);
-    bRx = (obj1.bR.x >= obj2.tL.x && obj1.bR.x <= obj2.tR.x);
-  }
-  else if (obj2.tL.x >= obj2.tR.x)
-  {
-    tLx = (obj1.tL.x <= obj2.tL.x && obj1.tL.x >= obj2.tR.x);
-    tRx = (obj1.tR.x <= obj2.tL.x && obj1.tR.x >= obj2.tR.x);
-    bLx = (obj1.bL.x <= obj2.tL.x && obj1.bL.x >= obj2.tR.x);
-    bRx = (obj1.bR.x <= obj2.tL.x && obj1.bR.x >= obj2.tR.x);
-  }
-
-  if (obj1.bL.y >= obj2.tL.y)
-  {
-    tLy = (obj1.tL.y <= obj2.bL.y && obj1.tL.y >= obj2.tL.y);
-    tRy = (obj1.tR.y <= obj2.bL.y && obj1.tR.y >= obj2.tL.y);
-    bLy = (obj1.bL.y <= obj2.bL.y && obj1.bL.y >= obj2.tL.y);
-    bRy = (obj1.bR.y <= obj2.bL.y && obj1.bR.y >= obj2.tL.y);
-  }
-  else if (obj1.bL.y >= obj2.tL.y)
-  {
-    tLy = (obj1.tL.y >= obj2.bL.y && obj1.tL.y <= obj2.tL.y);
-    tRy = (obj1.tR.y >= obj2.bL.y && obj1.tR.y <= obj2.tL.y);
-    bLy = (obj1.bL.y >= obj2.bL.y && obj1.bL.y <= obj2.tL.y);
-    bRy = (obj1.bR.y >= obj2.bL.y && obj1.bR.y <= obj2.tL.y);
-  }
-
-/*  var nextObj1 = new object(0, obj1.width, obj1.height);
-  nextObj1.xPos = obj1.xPos + obj1.velocity.x*_perUpdate;
-  nextObj1.yPos = obj1.yPos + obj1.velocity.y*_perUpdate;
-
-  var nextObj2 = new object(0, obj2.width, obj2.height);
-  nextObj1.xPos = obj2.xPos + obj2.velocity.x*_perUpdate;
-  nextObj1.yPos = obj2.yPos + obj2.velocity.y*_perUpdate;
-*/
-
-
-  if ((tLx || tRx || bLx || bRx) && (tLy || tRy || bLy || bRy))
+    if (obj1.bL.y - 5 < obj2.tL.y)
+      obj1.interact = 3;
+    else if (obj1.tL.x +5 > obj2.tR.x)
+        obj1.interact = 2;
+    else if (obj1.bR.x -5 < obj2.bL.x)
+      obj1.interact = 0;
+    else if (obj1.tR.y +5 > obj2.bR.y)
+      obj1.interact = 1;
     kinematic.prototype.conserveMomentum (obj1, obj2, _perUpdate);
+  }
   else
     obj1.contact = false;
 }
 
 kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
 {
+  var side = obj1.interact;
+  console.log (obj1.xPos);
   if (obj1.contact == false)
   {
-    obj1.velocity.y *= -obj1.elasticity;
-    obj1.velocity.x *= -obj1.elasticity;
-    obj2.velocity.y *= -obj2.elasticity;
-    obj2.velocity.x *= -obj2.elasticity;
-
-    // TODO fix so works for hitting object from x side too.
-    if (obj1.yPos - obj1.velocity.y * _perUpdate <= obj2.yPos)
-      obj1.yPos = obj2.yPos - obj1.height;
+    if (side == 0)
+    {
+      obj1.velocity.x *= -obj1.elasticity;
+      obj2.velocity.x *= -obj2.elasticity;
+      obj1.xPos = obj2.bL - obj1.width;
+    }
+    else if (side == 1)
+    {
+      obj1.velocity.y *= -obj1.elasticity;
+      obj2.velocity.y *= -obj2.elasticity;
+      obj1.yPos = obj2.bL.y;
+    }
+    else if (side == 2)
+    {
+      obj1.velocity.x *= -obj1.elasticity;
+      obj2.velocity.x *= -obj2.elasticity;
+      obj1.xPos = obj2.tR.x;
+    }
+    else if (side == 3)
+    {
+      obj1.velocity.y *= -obj1.elasticity;
+      obj2.velocity.y *= -obj2.elasticity;
+      obj1.yPos = obj2.tR.y - obj1.height;
+    }
   }
   obj1.contact = true;
   obj1.acceleration.y -= obj1.acceleration.y;

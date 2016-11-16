@@ -34,8 +34,8 @@ var _ninja = {
 }
 
 var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
-ninja.xPos = game.width/2 - _ninja.width/2;
-ninja.yPos = game.height - _ninja.height;
+ninja.xPos = 0;
+ninja.yPos = 0;
 
 function screen (ninjadiv, bgdiv)
 {
@@ -74,11 +74,10 @@ screen.prototype.drawObject = function (obj, offsetX, offsetY)
   nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
 }
 
-// TODO use arena1 prototype to add arena1 bg, special props
 screen.prototype.arena1 = function ()
 {
 
-    var _building1 = new object("img/building1.svg", 490, 179);
+    var _building1 = new object("img/building1.svg", 467, 179);
     _building1.yPos = game.height - 100;
     _building1.xPos = -300;
 
@@ -99,7 +98,6 @@ screen.prototype.refresh = function ()
   setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
 
   nCtx.clearRect(0, 0, game.width, game.height);
-
   switch (game.level)
   {
     case 1:
@@ -117,11 +115,9 @@ screen.prototype.keys = function (evt)
   switch (evt.keyCode)
   {
     case key.left:
-      ninja.velocity.y -= 3;
       ninja.velocity.x -= 10;
       break;
     case key.right:
-      ninja.velocity.y -= 3;
       ninja.velocity.x += 10;
       break;
     case key.space:
