@@ -1,7 +1,7 @@
 // game.js
 // Ryan Stonebraker
 // Created: 10/13/2016
-// Last Updated: 11/10/2016
+// Last Updated: 11/15/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
 var nCtx;
@@ -21,7 +21,8 @@ var key = {
   "down" : "S".charCodeAt(),
   "left" : "A".charCodeAt(),
   "right" : "D".charCodeAt(),
-  "space" : " ".charCodeAt()
+  "space" : " ".charCodeAt(),
+  "spacePressed" : 0
 }
 
 var _ninja = {
@@ -30,7 +31,7 @@ var _ninja = {
   },
   width : 77,
   height : 100
-};
+}
 
 var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
 ninja.xPos = game.width/2 - _ninja.width/2;
@@ -71,30 +72,19 @@ screen.prototype.makeNinja = function (x, y)
 }
 
 // TODO use arena1 prototype to add arena1 bg, special props
-// TODO remove fake ground detection when collision detection is implemented
-var triggered = false;
-var gTrig = false;
 screen.prototype.arena1 = function ()
 {
-  if (ninja.bL.y >= game.height && triggered == true)
-  {
-    ninja.acceleration.y = 0;
-    ninja.velocity.y = 0;
-    ninja.yMid = game.height - ninja.height/2;
-    triggered = false;
-  }
-  if (ninja.bL.y < game.height)
-  {
-    console.log("Above ground");
-    if (!gTrig || ninja.acceleration.y == 0)
-    {
-      ninja.acceleration.y += 100;
-      gTrig = true;
-    }
-    triggered = true;
-    console.log (triggered);
-  }
 
+    var _building1 = new object(0, 3*game.width/8, 100);
+    _building1.yPos = game.height;
+
+    ninja.elasticity = 0.3;
+
+  //  if (!ninja.velocity.y)
+  //    game.spacePressed = 0;
+
+    ninja.acceleration.y = 9.81;
+    kinematic.prototype.detectCollision (ninja, _building1, game.fps);
 }
 
 screen.prototype.refresh = function ()
@@ -109,6 +99,7 @@ screen.prototype.refresh = function ()
       break;
   }
   kinematic (ninja, game.fps);
+
 
   this.makeNinja(ninja.xPos, ninja.yPos);
   physpane();
@@ -125,7 +116,11 @@ screen.prototype.keys = function (evt)
       ninja.xPos += 30;
       break;
     case key.space:
-      ninja.velocity.y += -50;
+      //if(game.spacePressed < 2)
+    //  {
+      //  ++game.spacePressed;
+        ninja.velocity.y += -20;
+    //  }
       evt.preventDefault();
       break;
   }

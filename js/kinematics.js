@@ -1,81 +1,89 @@
 // kinematics.js
 // Ryan Stonebraker
 // Created 11/10/2016
-// Last Updated: 11/12/2016
+// Last Updated: 11/15/2016
 // kinematic functions integrated with game.js
 
 
 // "object" on screen for collision detection and sprites
 var object = function (imgSrc, width, height) {
-  if (!imgSrc)
-    console.log ("NO IMAGE:");
+  var prop = this;
 
-  this.img = new Image ();
-  this.img.src = imgSrc;
-  this._xPos = 0;
-  this._yPos = 0;
-  this._angle = 0;
-  this.hyp = Math.sqrt((width*width)/4 + (height*height)/4);
-  this.localRad = Math.atan(height/width);
+  prop.img = new Image ();
+  if (imgSrc)
+    prop.img.src = imgSrc;
+  prop._xPos = 0;
+  prop._yPos = 0;
+  prop._angle = 0;
+  prop.width = width;
+  prop.height = height;
+  prop.hyp = Math.sqrt((width*width)/4 + (height*height)/4);
+  prop.localRad = Math.atan(height/width);
 
-  this.update = function() {
-    this.rads = this._angle * Math.PI/180;
-    this.xMid = this._xPos + width/2;
-    this.yMid = this._yPos + height/2;
-    this.bR = {x: 0, y: 0};
-    this.bR.x = this.xMid + this.hyp * Math.cos(this.localRad - this.rads);
-    this.bR.y = this.yMid + this.hyp * Math.sin(this.localRad - this.rads);
-    this.tR = {x: 0, y: 0};
-    this.tR.x = this.xMid + this.hyp * Math.cos(this.localRad + this.rads);
-    this.tR.y = this.yMid - this.hyp * Math.sin(this.localRad + this.rads);
-    this.tL = {x: 0, y: 0};
-    this.tL.x = this.xMid - this.hyp * Math.cos(this.localRad - this.rads);
-    this.tL.y = this.yMid - this.hyp * Math.sin(this.localRad - this.rads);
-    this.bL = {x: 0, y: 0};
-    this.bL.x = this.xMid - this.hyp * Math.cos(this.localRad + this.rads);
-    this.bL.y = this.yMid + this.hyp * Math.sin(this.localRad + this.rads);
+  prop.update = function() {
+    prop.rads = prop._angle * Math.PI/180;
+    prop.xMid = prop._xPos + width/2;
+    prop.yMid = prop._yPos + height/2;
+    prop.bR = {x: 0, y: 0};
+    prop.bR.x = prop.xMid + prop.hyp * Math.cos(prop.localRad - prop.rads);
+    prop.bR.y = prop.yMid + prop.hyp * Math.sin(prop.localRad - prop.rads);
+    prop.tR = {x: 0, y: 0};
+    prop.tR.x = prop.xMid + prop.hyp * Math.cos(prop.localRad + prop.rads);
+    prop.tR.y = prop.yMid - prop.hyp * Math.sin(prop.localRad + prop.rads);
+    prop.tL = {x: 0, y: 0};
+    prop.tL.x = prop.xMid - prop.hyp * Math.cos(prop.localRad - prop.rads);
+    prop.tL.y = prop.yMid - prop.hyp * Math.sin(prop.localRad - prop.rads);
+    prop.bL = {x: 0, y: 0};
+    prop.bL.x = prop.xMid - prop.hyp * Math.cos(prop.localRad + prop.rads);
+    prop.bL.y = prop.yMid + prop.hyp * Math.sin(prop.localRad + prop.rads);
   }
 
-  Object.defineProperty (this, 'angle', {
-    get: function () { return this._angle; },
+  Object.defineProperty (prop, 'angle', {
+    get: function () { return prop._angle; },
     set: function (v) {
-      this._angle = v;
-      this.update(); }
+      prop._angle = v;
+      prop.update(); }
   });
 
-  Object.defineProperty (this, 'xPos', {
-    get: function () { return this._xPos; },
+  Object.defineProperty (prop, 'xPos', {
+    get: function () { return prop._xPos; },
     set: function (v) {
-      this._xPos = v;
-      this.update(); }
+      prop._xPos = v;
+      prop.update(); }
   });
 
-  Object.defineProperty (this, 'yPos', {
-    get: function () { return this._yPos; },
+  Object.defineProperty (prop, 'yPos', {
+    get: function () { return prop._yPos; },
     set: function (v) {
-      this._yPos = v;
-      this.update(); }
+      prop._yPos = v;
+      prop.update(); }
   });
 
-  this.update();
+  prop.update();
 
-  this.velocity = {x: 0, y: 0};
-  this.acceleration = {x: 0, y: 0};
-  this.aTimeLeft = -1; // -1 to keep accelerating until something changes
+  prop.elasticity = 0;
+  prop.velocity = {x: 0, y: 0};
+  prop.acceleration = {x: 0, y: 0};
+  prop.aTimeLeft = -1; // -1 to keep accelerating until something changes
+  prop.contact = false;
 }
 
-function kinematic (object, fps)
-{
-  kinematic.prototype.accelerate (object, fps);
-  kinematic.prototype.moveObj (object, fps);
-  // TODO implement collision detection between objects AND surfaces
-  //this.detectCollision (object, fps);
-}
-
-kinematic.prototype.accelerate = function (object, fps)
+function kinematic (objA, fps)
 {
   var _perUpdate = fps/1000;
+  kinematic.prototype.accelerate (objA, _perUpdate);
+  kinematic.prototype.moveObj (objA, _perUpdate);
+  // TODO implement collision detection between objects AND surfaces
+  // NOTE use an elasticity variable for collisions thats unique to each
+  // object surfaces should have 0 so they do not move, perfectly elastic = 1
+  // to make a surface, make it same as regular object, just elasticity of 0
+  // prop way it can be moved if necessary too.
+  //if (object2)
+  //  kinematic.prototype.detectCollision (object, object2, _perUpdate);
+}
 
+kinematic.prototype.accelerate = function (object, _perUpdate)
+{
   if (object.aTimeLeft == -1)
   {
     object.velocity.x += object.acceleration.x * _perUpdate;
@@ -99,10 +107,85 @@ kinematic.prototype.accelerate = function (object, fps)
   }
 }
 
-kinematic.prototype.moveObj = function (object, fps)
+kinematic.prototype.moveObj = function (object, _perUpdate)
 {
-  var _perUpdate = fps/1000;
-
   object.xPos += object.velocity.x * _perUpdate;
   object.yPos += object.velocity.y * _perUpdate;
+}
+
+kinematic.prototype.detectCollision = function (obj1, obj2, fps)
+{
+  _perUpdate = fps/1000;
+  // if obj1's top Left x is between obj2's top Left x and top Right x
+  var tLx;
+  var tRx;
+  var bLx;
+  var bRx;
+
+  var tLy;
+  var tRy;
+  var bLy;
+  var bRy;
+
+  if (obj2.tL.x <= obj2.tR.x)
+  {
+    tLx = (obj1.tL.x >= obj2.tL.x && obj1.tL.x <= obj2.tR.x);
+    tRx = (obj1.tR.x >= obj2.tL.x && obj1.tR.x <= obj2.tR.x);
+    bLx = (obj1.bL.x >= obj2.tL.x && obj1.bL.x <= obj2.tR.x);
+    bRx = (obj1.bR.x >= obj2.tL.x && obj1.bR.x <= obj2.tR.x);
+  }
+  else if (obj2.tL.x >= obj2.tR.x)
+  {
+    tLx = (obj1.tL.x <= obj2.tL.x && obj1.tL.x >= obj2.tR.x);
+    tRx = (obj1.tR.x <= obj2.tL.x && obj1.tR.x >= obj2.tR.x);
+    bLx = (obj1.bL.x <= obj2.tL.x && obj1.bL.x >= obj2.tR.x);
+    bRx = (obj1.bR.x <= obj2.tL.x && obj1.bR.x >= obj2.tR.x);
+  }
+
+  if (obj1.bL.y >= obj2.tL.y)
+  {
+    tLy = (obj1.tL.y <= obj2.bL.y && obj1.tL.y >= obj2.tL.y);
+    tRy = (obj1.tR.y <= obj2.bL.y && obj1.tR.y >= obj2.tL.y);
+    bLy = (obj1.bL.y <= obj2.bL.y && obj1.bL.y >= obj2.tL.y);
+    bRy = (obj1.bR.y <= obj2.bL.y && obj1.bR.y >= obj2.tL.y);
+  }
+  else if (obj1.bL.y >= obj2.tL.y)
+  {
+    tLy = (obj1.tL.y >= obj2.bL.y && obj1.tL.y <= obj2.tL.y);
+    tRy = (obj1.tR.y >= obj2.bL.y && obj1.tR.y <= obj2.tL.y);
+    bLy = (obj1.bL.y >= obj2.bL.y && obj1.bL.y <= obj2.tL.y);
+    bRy = (obj1.bR.y >= obj2.bL.y && obj1.bR.y <= obj2.tL.y);
+  }
+
+/*  var nextObj1 = new object(0, obj1.width, obj1.height);
+  nextObj1.xPos = obj1.xPos + obj1.velocity.x*_perUpdate;
+  nextObj1.yPos = obj1.yPos + obj1.velocity.y*_perUpdate;
+
+  var nextObj2 = new object(0, obj2.width, obj2.height);
+  nextObj1.xPos = obj2.xPos + obj2.velocity.x*_perUpdate;
+  nextObj1.yPos = obj2.yPos + obj2.velocity.y*_perUpdate;
+*/
+
+
+  if ((tLx || tRx || bLx || bRx) && (tLy || tRy || bLy || bRy))
+    kinematic.prototype.conserveMomentum (obj1, obj2, _perUpdate);
+  else
+    obj1.contact = false;
+}
+
+kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
+{
+  if (obj1.contact == false)
+  {
+    obj1.velocity.y *= -obj1.elasticity;
+    obj1.velocity.x *= -obj1.elasticity;
+    obj2.velocity.y *= -obj2.elasticity;
+    obj2.velocity.x *= -obj2.elasticity;
+
+    // TODO fix so works for hitting object from x side too.
+    if (obj1.yPos - obj1.velocity.y * _perUpdate <= obj2.yPos)
+      obj1.yPos = obj2.yPos - obj1.height;
+  }
+  obj1.contact = true;
+  obj1.acceleration.y -= obj1.acceleration.y;
 }
