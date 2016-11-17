@@ -1,9 +1,8 @@
 // kinematics.js
 // Ryan Stonebraker
 // Created 11/10/2016
-// Last Updated: 11/15/2016
+// Last Updated: 11/16/2016
 // kinematic functions integrated with game.js
-
 
 // "object" on screen for collision detection and sprites
 var object = function (imgSrc, width, height) {
@@ -63,10 +62,12 @@ var object = function (imgSrc, width, height) {
 
   prop.elasticity = 0;
   prop.velocity = {x: 0, y: 0};
+  prop.simVelocity = {x: 0};
   prop.acceleration = {x: 0, y: 0};
   prop.aTimeLeft = -1; // -1 to keep accelerating until something changes
   prop.contact = false;
   prop.interact = 3;
+  prop.kineticFriction = 0.05;
 }
 
 function kinematic (objA, fps)
@@ -88,11 +89,13 @@ kinematic.prototype.accelerate = function (object, _perUpdate)
   if (object.aTimeLeft == -1)
   {
     object.velocity.x += object.acceleration.x * _perUpdate;
+    object.velocity.x += object.acceleration.x * _perUpdate;
     object.velocity.y += object.acceleration.y * _perUpdate;
   }
 
   if (object.aTimeLeft > 0)
   {
+      object.simVelocity.x += object.acceleration.x * _perUpdate;
       object.velocity.x += object.acceleration.x * _perUpdate;
       object.velocity.y += object.acceleration.y * _perUpdate;
       object.aTimeLeft -= _perUpdate;
@@ -144,31 +147,33 @@ kinematic.prototype.detectCollision = function (obj1, obj2, fps)
 kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
 {
   var side = obj1.interact;
-  console.log (obj1.xPos);
+
   if (obj1.contact == false)
   {
     if (side == 0)
     {
+      obj1.simVelocity.x *= -obj1.elasticity;
       obj1.velocity.x *= -obj1.elasticity;
-      obj2.velocity.x *= -obj2.elasticity;
       obj1.xPos = obj2.bL - obj1.width;
     }
     else if (side == 1)
     {
       obj1.velocity.y *= -obj1.elasticity;
-      obj2.velocity.y *= -obj2.elasticity;
       obj1.yPos = obj2.bL.y;
     }
     else if (side == 2)
     {
+      obj1.simVelocity.x *= -obj1.elasticty;
       obj1.velocity.x *= -obj1.elasticity;
-      obj2.velocity.x *= -obj2.elasticity;
       obj1.xPos = obj2.tR.x;
     }
     else if (side == 3)
     {
-      obj1.velocity.y *= -obj1.elasticity;
-      obj2.velocity.y *= -obj2.elasticity;
+      obj1.velocity.x -= obj1.velocity.x * obj2.kineticFriction;
+      obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+
+      if (obj1.velocity.y > 0)
+        obj1.velocity.y *= -obj1.elasticity;
       obj1.yPos = obj2.tR.y - obj1.height;
     }
   }
