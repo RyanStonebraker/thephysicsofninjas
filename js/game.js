@@ -14,7 +14,9 @@ var game = {
   "height" : 250,
   "fps" : 50,
   "level" : 1,
-  "spacePressed" : 0
+  "spacePressed" : 0,
+  "initialContact" : false,
+  "jump" : 1
 }
 
 var key = {
@@ -22,8 +24,7 @@ var key = {
   "down" : "S".charCodeAt(),
   "left" : "A".charCodeAt(),
   "right" : "D".charCodeAt(),
-  "space" : " ".charCodeAt(),
-  "spacePressed" : 0
+  "space" : " ".charCodeAt()
 }
 
 window.Game = {};
@@ -33,8 +34,13 @@ var _ninja = {
   img : {
     std : "img/ninja.svg"
   },
-  width : 77,
-  height : 100
+  width : 35,
+  height : 78,
+  offset : {
+    x : -12,
+    y : 0
+  },
+  name : "ninja"
 }
 
 var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
@@ -74,23 +80,52 @@ screen.prototype.drawObject = function (obj, offsetX, offsetY)
     offsetX = 0;
   if (!offsetY)
     offsetY = 0;
-  //nCtx.fillRect (0, 0, game.width, game.height);
   nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
 }
 
+screen.prototype.pseudoCamera = function (velocity)
+{
+  switch (game.level)
+  {
+    case 1:
+      if (velocity == 0)
+      {
+        _building1.velocity.x = _building1.simVelocity.x;
+        _building2.velocity.x = _building2.simVelocity.x;
+      }
+      else
+      {
+        _building1.velocity.x = velocity + _building1.simVelocity.x;
+        _building2.velocity.x = velocity + _building2.simVelocity.x;
+      }
+      break;
+  }
+}
+
 var _building1 = new object("img/building1.svg", 467, 179);
-_building1.yPos = game.height - 100;
+_building1.yPos = game.height - 150;
 _building1.xPos = -300;
+_building1.name = "b1";
+var _building2 = new object("img/building1.svg", 467, 179);
+_building2.yPos = game.height - 50;
+_building2.xPos = 300;
+_building2.name = "b2";
 
 screen.prototype.arena1 = function ()
 {
-    this.drawObject (_building1, 0, -15);
+    this.drawObject (_building1, -15, -15);
+    this.drawObject (_building2, -15, -15);
 
     ninja.elasticity = 0.1;
-
     ninja.acceleration.y = 15;
     kinematic (_building1, game.fps);
+    kinematic (_building2, game.fps);
+
+    // TODO make collision separator less buggy, possible solution, create
+    // a "contactWithNinja" property and then have ninja add these contacts up,
+    // if 0, then not in contact with anything
     kinematic.prototype.detectCollision (ninja, _building1, game.fps);
+    kinematic.prototype.detectCollision (ninja, _building2, game.fps);
 }
 
 screen.prototype.refresh = function ()
@@ -114,16 +149,16 @@ screen.prototype.refresh = function ()
   {
     ninja.xPos = 50;
     ninja.velocity.x = 0;
-    _building1.velocity.x = -ninja.simVelocity.x;
+    this.pseudoCamera(-ninja.simVelocity.x);
   }
   else if (ninja.tR.x + game.fps/1000 * ninja.simVelocity.x >= game.width - 50)
   {
     ninja.xPos = game.width - 50 - ninja.width;
     ninja.velocity.x = 0;
-    _building1.velocity.x = -ninja.simVelocity.x;
+    this.pseudoCamera(-ninja.simVelocity.x);
   }
 
-  this.drawObject(ninja);
+  this.drawObject(ninja, _ninja.offset.x, _ninja.offset.y);
   physpane();
 }
 
@@ -132,33 +167,33 @@ screen.prototype.keys = function (evt)
   switch (evt.keyCode)
   {
     case key.left:
-      ninja.simVelocity.x -= 10;
-      if (ninja.xPos > game.width/2 - 150)
+      if (ninja.contact)
       {
-        ninja.velocity.x = ninja.simVelocity.x;
-        _building1.velocity.x = 0;
-      }
-      else
-      {
-        _building1.velocity.x = -ninja.simVelocity.x;
-        ninja.velocity.x = 0;
-      }
+        ninja.simVelocity.x -= 10;
+        if (ninja.xPos > game.width/2 - 150 && ninja.contact)
+        {
+          ninja.velocity.x = ninja.simVelocity.x;
+          this.pseudoCamera(0);
+        }
       break;
-    case key.right:
-      ninja.simVelocity.x += 10;
-      if (ninja.tR.x < game.width/2 + 150)
-      {
-        ninja.velocity.x = ninja.simVelocity.x;
-        _building1.velocity.x = 0;
       }
-      else
+    case key.right:
+      if (ninja.contact)
       {
-        _building1.velocity.x = -ninja.simVelocity.x;
-        ninja.velocity.x = 0;
+        ninja.simVelocity.x += 10;
+        if (ninja.tR.x < game.width/2 + 150 && ninja.contact)
+        {
+          ninja.velocity.x = ninja.simVelocity.x;
+          this.pseudoCamera(0);
+        }
       }
       break;
     case key.space:
-      if(game.spacePressed < 2)
+      if (game.spacePressed == 0 && ninja.contact)
+        game.initialContact = true;
+      else if (game.spacePressed == game.jump-1 && !ninja.contact)
+        game.initialContact = false;
+      if(game.spacePressed < game.jump && game.initialContact)
       {
         ++game.spacePressed;
         ninja.velocity.y = -20;

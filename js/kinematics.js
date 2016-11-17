@@ -1,13 +1,14 @@
 // kinematics.js
 // Ryan Stonebraker
 // Created 11/10/2016
-// Last Updated: 11/16/2016
+// Last Updated: 11/17/2016
 // kinematic functions integrated with game.js
 
 // "object" on screen for collision detection and sprites
 var object = function (imgSrc, width, height) {
   var prop = this;
 
+  prop.name = "";
   prop.img = new Image ();
   if (imgSrc)
     prop.img.src = imgSrc;
@@ -66,29 +67,32 @@ var object = function (imgSrc, width, height) {
   prop.acceleration = {x: 0, y: 0};
   prop.aTimeLeft = -1; // -1 to keep accelerating until something changes
   prop.contact = false;
+  prop.contactSrc = "none";
   prop.interact = 3;
   prop.kineticFriction = 0.05;
 }
 
 function kinematic (objA, fps)
 {
+  var rnd = 1000;
   var _perUpdate = fps/1000;
   kinematic.prototype.accelerate (objA, _perUpdate);
   kinematic.prototype.moveObj (objA, _perUpdate);
-  // TODO implement collision detection between objects AND surfaces
-  // NOTE use an elasticity variable for collisions thats unique to each
-  // object surfaces should have 0 so they do not move, perfectly elastic = 1
-  // to make a surface, make it same as regular object, just elasticity of 0
-  // prop way it can be moved if necessary too.
-  //if (object2)
-  //  kinematic.prototype.detectCollision (object, object2, _perUpdate);
+
+  // no need to calculate nonvisible changes
+  if (Math.abs(objA.simVelocity.x) < 0.05)
+    objA.simVelocity.x = 0;
+  if (Math.abs(objA.velocity.x) < 0.05)
+    objA.velocity.x = 0;
+  if (Math.abs(objA.velocity.y) < 0.05)
+    objA.velocity.y = 0;
 }
 
 kinematic.prototype.accelerate = function (object, _perUpdate)
 {
   if (object.aTimeLeft == -1)
   {
-    object.velocity.x += object.acceleration.x * _perUpdate;
+    object.simVelocity.x += object.acceleration.x * _perUpdate;
     object.velocity.x += object.acceleration.x * _perUpdate;
     object.velocity.y += object.acceleration.y * _perUpdate;
   }
@@ -119,13 +123,14 @@ kinematic.prototype.moveObj = function (object, _perUpdate)
 
 kinematic.prototype.detectCollision = function (obj1, obj2, fps)
 {
-  _perUpdate = fps/1000;
+  var _perUpdate = fps/1000;
+  var mrgn = 0.5; // compensate for slight inaccuracies in computer calculations
 
   // no rotation bounds
-  var rightSide = (obj1.tR.x >= obj2.tL.x && obj1.tR.x <= obj2.tR.x);
-  var top = (obj1.tR.y <= obj2.bR.y && obj1.tR.y >= obj2.tR.y);
-  var leftSide = (obj1.tL.x <= obj2.tR.x && obj2.tL.x >= obj2.tL.x);
-  var bottom = (obj1.bR.y >= obj2.tR.y && obj1.bR.y <= obj2.bR.y);
+  var rightSide = (obj1.tR.x + mrgn >= obj2.tL.x && obj1.tR.x - mrgn <= obj2.tR.x);
+  var top = (obj1.tR.y - mrgn <= obj2.bR.y && obj1.tR.y + mrgn >= obj2.tR.y);
+  var leftSide = (obj1.tL.x - mrgn <= obj2.tR.x && obj1.tL.x + mrgn >= obj2.tL.x);
+  var bottom = (obj1.bR.y + mrgn >= obj2.tR.y && obj1.bR.y - mrgn <= obj2.bR.y);
 
   // 0 = rightSide, 1 = top, 2 = leftSide, 3 = bottom
   if ((rightSide || leftSide) && (top || bottom))
@@ -139,16 +144,23 @@ kinematic.prototype.detectCollision = function (obj1, obj2, fps)
     else if (obj1.tR.y +5 > obj2.bR.y)
       obj1.interact = 1;
     kinematic.prototype.conserveMomentum (obj1, obj2, _perUpdate);
+    obj1.contactSrc = obj2.name;
   }
   else
-    obj1.contact = false;
+  {
+    if (obj1.contactSrc == obj2.name)
+    {
+      obj1.contactSrc = "none";
+      obj1.contact = false;
+    }
+  }
 }
 
 kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
 {
   var side = obj1.interact;
 
-  if (obj1.contact == false)
+  if (!obj1.contact)
   {
     if (side == 0)
     {
@@ -171,12 +183,17 @@ kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
     {
       obj1.velocity.x -= obj1.velocity.x * obj2.kineticFriction;
       obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
-
       if (obj1.velocity.y > 0)
         obj1.velocity.y *= -obj1.elasticity;
       obj1.yPos = obj2.tR.y - obj1.height;
     }
   }
+  else if (side == 3)
+  {
+    obj1.velocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+    obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+  }
+
   obj1.contact = true;
   obj1.acceleration.y -= obj1.acceleration.y;
 }
