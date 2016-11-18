@@ -1,8 +1,13 @@
 // game.js
 // Ryan Stonebraker
 // Created: 10/13/2016
-// Last Updated: 11/16/2016
+// Last Updated: 11/17/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
+
+// start game with a scaled out overview of map w/game controls - press space to
+// start and then game zooms in to sprite.
+// This could be done by drawing ninja on ninjacanvas and everything else on
+// bgcanvas and then using built in nCtx.scale(1,1) and bgCtx.scale(1,1)
 
 var nCtx;
 var bgCtx;
@@ -45,6 +50,7 @@ var _ninja = {
 
 var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
 ninja.xPos = 0;
+ninja.simX = 50;
 ninja.yPos = 0;
 
 function screen (ninjadiv, bgdiv)
@@ -105,10 +111,12 @@ screen.prototype.pseudoCamera = function (velocity)
 var _building1 = new object("img/building1.svg", 467, 179);
 _building1.yPos = game.height - 150;
 _building1.xPos = -300;
+_building1.simX = _building1.xPos;
 _building1.name = "b1";
 var _building2 = new object("img/building1.svg", 467, 179);
 _building2.yPos = game.height - 50;
 _building2.xPos = 300;
+_building2.simX = _building2.xPos;
 _building2.name = "b2";
 
 screen.prototype.arena1 = function ()

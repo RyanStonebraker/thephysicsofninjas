@@ -14,6 +14,7 @@ var object = function (imgSrc, width, height) {
     prop.img.src = imgSrc;
   prop._xPos = 0;
   prop._yPos = 0;
+  prop.simX = 0;
   prop._angle = 0;
   prop.width = width;
   prop.height = height;
@@ -36,6 +37,10 @@ var object = function (imgSrc, width, height) {
     prop.bL = {x: 0, y: 0};
     prop.bL.x = prop.xMid - prop.hyp * Math.cos(prop.localRad + prop.rads);
     prop.bL.y = prop.yMid + prop.hyp * Math.sin(prop.localRad + prop.rads);
+    prop.lX = prop.simX;
+    prop.rX = prop.simX + prop.width;
+    prop.tY = prop.yPos;
+    prop.bY = prop.yPos + prop.height;
   }
 
   Object.defineProperty (prop, 'angle', {
@@ -86,6 +91,9 @@ function kinematic (objA, fps)
     objA.velocity.x = 0;
   if (Math.abs(objA.velocity.y) < 0.05)
     objA.velocity.y = 0;
+
+  if (Math.abs(objA.velocity.y) < 0.5 && objA.contact)
+    objA.yPos = Math.round(objA.yPos, -2);
 }
 
 kinematic.prototype.accelerate = function (object, _perUpdate)
@@ -117,6 +125,7 @@ kinematic.prototype.accelerate = function (object, _perUpdate)
 
 kinematic.prototype.moveObj = function (object, _perUpdate)
 {
+  object.simX += object.simVelocity.x * _perUpdate;
   object.xPos += object.velocity.x * _perUpdate;
   object.yPos += object.velocity.y * _perUpdate;
 }
@@ -125,23 +134,47 @@ kinematic.prototype.detectCollision = function (obj1, obj2, fps)
 {
   var _perUpdate = fps/1000;
   var mrgn = 0.5; // compensate for slight inaccuracies in computer calculations
+/*
+  var lX1 = obj1.simX;
+  var rX1 = obj1.simX + obj1.width;
+  var tY1 = obj1.yPos;
+  var bY1 = obj1.yPos + obj1.height;
+
+  var lX2 = obj2.simX;
+  var rX2 = obj2.simX + obj2.width;
+  var tY2 = obj2.yPos;
+  var bY2 = obj2.yPos + obj2.height;
+*/
+  var lX1 = obj1.lX;
+  var rX1 = obj1.rX;
+  var tY1 = obj1.tY;
+  var bY1 = obj1.bY;
+
+  var lX2 = obj2.lX;
+  var rX2 = obj2.rX;
+  var tY2 = obj2.tY;
+  var bY2 = obj2.bY;
 
   // no rotation bounds
-  var rightSide = (obj1.tR.x + mrgn >= obj2.tL.x && obj1.tR.x - mrgn <= obj2.tR.x);
-  var top = (obj1.tR.y - mrgn <= obj2.bR.y && obj1.tR.y + mrgn >= obj2.tR.y);
-  var leftSide = (obj1.tL.x - mrgn <= obj2.tR.x && obj1.tL.x + mrgn >= obj2.tL.x);
-  var bottom = (obj1.bR.y + mrgn >= obj2.tR.y && obj1.bR.y - mrgn <= obj2.bR.y);
+  var rightSide = (rX1 + mrgn >= lX2 && rX1 - mrgn <= rX2);
+  var top = (tY1 - mrgn <= bY2 && tY1 + mrgn >= tY2);
+  var leftSide = (lX1 - mrgn <= rX2 && lX1 + mrgn >= lX2);
+  var bottom = (bY1 + mrgn >= tY2 && bY1 - mrgn <= bY2);
+
+  var sideGap = 5;
+  if (Math.abs(obj1.simVelocity.x *_perUpdate) > sideGap)
+    sideGap = Math.abs(obj1.simVelocity.x);
 
   // 0 = rightSide, 1 = top, 2 = leftSide, 3 = bottom
   if ((rightSide || leftSide) && (top || bottom))
   {
-    if (obj1.bL.y - 5 < obj2.tL.y)
+    if (bY1 -5 < tY2 && rightSide && leftSide)
       obj1.interact = 3;
-    else if (obj1.tL.x +5 > obj2.tR.x)
+    else if (lX1 - sideGap < rX2 && bottom && top)
         obj1.interact = 2;
-    else if (obj1.bR.x -5 < obj2.bL.x)
+    else if (rX1 + sideGap > lX2 && bottom && top)
       obj1.interact = 0;
-    else if (obj1.tR.y +5 > obj2.bR.y)
+    else if (tY1 +5 > bY2 && rightSide && leftSide)
       obj1.interact = 1;
     kinematic.prototype.conserveMomentum (obj1, obj2, _perUpdate);
     obj1.contactSrc = obj2.name;
@@ -164,20 +197,22 @@ kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
   {
     if (side == 0)
     {
-      obj1.simVelocity.x *= -obj1.elasticity;
-      obj1.velocity.x *= -obj1.elasticity;
-      obj1.xPos = obj2.bL - obj1.width;
+      obj1.simVelocity.x = 0;
+      obj1.velocity.x = 0;
+      obj1.xPos = obj2.lX - obj1.width;
+      obj1.simX = obj2.lX - obj1.width;
     }
     else if (side == 1)
     {
       obj1.velocity.y *= -obj1.elasticity;
-      obj1.yPos = obj2.bL.y;
+      obj1.yPos = obj2.bY;
     }
     else if (side == 2)
     {
-      obj1.simVelocity.x *= -obj1.elasticty;
-      obj1.velocity.x *= -obj1.elasticity;
+      obj1.simVelocity.x = 0;
+      obj1.velocity.x = 0;
       obj1.xPos = obj2.tR.x;
+      obj1.simX = obj2.rX;
     }
     else if (side == 3)
     {
@@ -185,13 +220,27 @@ kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
       obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
       if (obj1.velocity.y > 0)
         obj1.velocity.y *= -obj1.elasticity;
-      obj1.yPos = obj2.tR.y - obj1.height;
+      obj1.yPos = obj2.tY - obj1.height;
     }
   }
   else if (side == 3)
   {
     obj1.velocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
     obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+  }
+  else if (side == 2)
+  {
+    if (obj1.simX < obj2.rX + 5)
+    {
+    obj1.xPos = obj2.tR.x;
+    obj1.simX = obj2.rX;
+    }
+    obj1.velocity.x *= -obj1.elasticity;
+    obj1.simVelocity.x *= -obj1.elasticity;
+    if (obj1.velocity.x > 0 || obj1.simVelocity.x > 0)
+    {
+      obj1.velocity.x *= -1;
+    }
   }
 
   obj1.contact = true;
