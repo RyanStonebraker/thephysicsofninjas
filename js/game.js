@@ -4,6 +4,7 @@
 // Last Updated: 11/17/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
+// TODO -add event listener, add bg Canvas
 // start game with a scaled out overview of map w/game controls - press space to
 // start and then game zooms in to sprite.
 // This could be done by drawing ninja on ninjacanvas and everything else on
@@ -21,7 +22,14 @@ var game = {
   "level" : 1,
   "spacePressed" : 0,
   "initialContact" : false,
-  "jump" : 1
+  "jump" : 1,
+  "xKeySpeed" : 15,
+  "yKeySpeed" : 20,
+  "startX" : 10,
+  "nScale" : 1,
+  "bgScale" : 1,
+  "nScaled" : false,
+  "bgScaled" : false
 }
 
 var key = {
@@ -39,8 +47,8 @@ var _ninja = {
   img : {
     std : "img/ninja.svg"
   },
-  width : 35,
-  height : 78,
+  width : 35 * game.nScale,
+  height : 78 * game.nScale,
   offset : {
     x : -12,
     y : 0
@@ -49,9 +57,6 @@ var _ninja = {
 }
 
 var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
-ninja.xPos = 0;
-ninja.simX = 50;
-ninja.yPos = 0;
 
 function screen (ninjadiv, bgdiv)
 {
@@ -68,32 +73,40 @@ function screen (ninjadiv, bgdiv)
   if (ninjacanvas.getContext)
   {
     nCtx = ninjacanvas.getContext("2d");
-    //bgCtx = bgcanvas.getContext("2d");
+    bgCtx = bgcanvas.getContext("2d");
 
     nCtx.clearRect(0, 0, game.width, game.height);
   }
 
-  this.drawObject (ninja);
-
   this.refresh ();
 
+  // TODO add keypress listener so that if key is held down, accelerate x
+  //window.addEventListener('keypress', this.keys.bind(this), true);
   window.addEventListener('keydown', this.keys.bind(this), true);
 }
 
-screen.prototype.drawObject = function (obj, offsetX, offsetY)
+screen.prototype.drawObject = function (obj, offsetX, offsetY, bg)
 {
   if (!offsetX)
     offsetX = 0;
   if (!offsetY)
     offsetY = 0;
-  nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
+  if (!bg)
+    nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
+  else
+    bgCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
 }
 
-screen.prototype.pseudoCamera = function (velocity)
+// shiftX should ONLY be used in a non looping context such as outside screen
+screen.prototype.pseudoCamera = function (velocity, shiftX)
 {
+  if (!shiftX)
+    shiftX = 0;
   switch (game.level)
   {
     case 1:
+      _building1.xPos += shiftX;
+      _building2.xPos += shiftX;
       if (velocity == 0)
       {
         _building1.velocity.x = _building1.simVelocity.x;
@@ -108,6 +121,8 @@ screen.prototype.pseudoCamera = function (velocity)
   }
 }
 
+if (game.level == 1)
+{
 var _building1 = new object("img/building1.svg", 467, 179);
 _building1.yPos = game.height - 150;
 _building1.xPos = -300;
@@ -119,21 +134,41 @@ _building2.xPos = 300;
 _building2.simX = _building2.xPos;
 _building2.name = "b2";
 
+ninja.simX = 50;
+ninja.yPos = _building1.tY - ninja.height;
+
+screen.prototype.pseudoCamera(0, game.startX);
+}
 screen.prototype.arena1 = function ()
 {
-    this.drawObject (_building1, -15, -15);
-    this.drawObject (_building2, -15, -15);
+  if (!game.nScaled)
+  {
+  nCtx.scale(game.nScale, game.nScale);
+  ninja.width *= game.nScale;
+  ninja.height *= game.nScale;
+  game.nScaled = true;
+  }
 
-    ninja.elasticity = 0.1;
-    ninja.acceleration.y = 15;
-    kinematic (_building1, game.fps);
-    kinematic (_building2, game.fps);
+  if (!game.bgScaled)
+  {
+    bgCtx.scale (game.bgScale, game.bgScale);
+    _building1.width *= game.bgScale;
+    _building1.height *= game.bgScale;
+    game.bgScaled = true;
+  }
 
-    // TODO make collision separator less buggy, possible solution, create
-    // a "contactWithNinja" property and then have ninja add these contacts up,
-    // if 0, then not in contact with anything
-    kinematic.prototype.detectCollision (ninja, _building1, game.fps);
-    kinematic.prototype.detectCollision (ninja, _building2, game.fps);
+  var drawBG = true;
+  var drawN = false;
+  this.drawObject (_building1, -15, -15, drawN);
+  this.drawObject (_building2, -15, -15, drawN);
+
+  ninja.elasticity = 0.1;
+  ninja.acceleration.y = 15;
+  kinematic (_building1, game.fps);
+  kinematic (_building2, game.fps);
+
+  kinematic.prototype.detectCollision (ninja, _building1, game.fps);
+  kinematic.prototype.detectCollision (ninja, _building2, game.fps);
 }
 
 screen.prototype.refresh = function ()
@@ -141,7 +176,8 @@ screen.prototype.refresh = function ()
   var self = this;
   setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
 
-  nCtx.clearRect(0, 0, game.width, game.height);
+  nCtx.clearRect (0, 0, game.width, game.height);
+  bgCtx.clearRect (0, 0, game.width, game.height);
   switch (game.level)
   {
     case 1:
@@ -177,7 +213,7 @@ screen.prototype.keys = function (evt)
     case key.left:
       if (ninja.contact)
       {
-        ninja.simVelocity.x -= 10;
+        ninja.simVelocity.x -= game.xKeySpeed;
         if (ninja.xPos > game.width/2 - 150 && ninja.contact)
         {
           ninja.velocity.x = ninja.simVelocity.x;
@@ -188,7 +224,7 @@ screen.prototype.keys = function (evt)
     case key.right:
       if (ninja.contact)
       {
-        ninja.simVelocity.x += 10;
+        ninja.simVelocity.x += game.xKeySpeed;
         if (ninja.tR.x < game.width/2 + 150 && ninja.contact)
         {
           ninja.velocity.x = ninja.simVelocity.x;
@@ -197,14 +233,16 @@ screen.prototype.keys = function (evt)
       }
       break;
     case key.space:
-      if (game.spacePressed == 0 && ninja.contact)
+      if (game.spacePressed == 0 && ninja.contact && ninja.interact == 3)
+      {
         game.initialContact = true;
-      else if (game.spacePressed == game.jump-1 && !ninja.contact)
+      }
+      else if (game.spacePressed == game.jump-1 && (!ninja.contact || ninja.interact))
         game.initialContact = false;
       if(game.spacePressed < game.jump && game.initialContact)
       {
         ++game.spacePressed;
-        ninja.velocity.y = -20;
+        ninja.velocity.y = -game.yKeySpeed;
       }
       evt.preventDefault();
       break;

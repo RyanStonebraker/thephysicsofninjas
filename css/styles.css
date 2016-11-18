@@ -61,6 +61,22 @@ h1 {
   margin-right: auto;
   margin-left: auto;
   line-height: 0;
+  position: relative;
+}
+
+#gameHolder canvas {
+  position: absolute;
+}
+
+#bgCanvas {
+  z-index: 0;
+}
+
+#gameCanvas {
+  z-index: 1;
+}
+#physicsCanvas {
+  margin-top: 62.6%;
 }
 
 #Instructions-holder {

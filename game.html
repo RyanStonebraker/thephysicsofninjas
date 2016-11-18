@@ -8,7 +8,7 @@
     <script src = "js/game.js"></script>
     <script src = "js/physicspane.js"></script>
   </head>
-    <body onload="physpane();">
+    <body>
       <div id = "center-body">
         <h1 class = "nontrans">
           The Physics of Ninjas
@@ -24,6 +24,9 @@
         </div>
         <div id="gameHolder">
           <canvas id = "gameCanvas" width = "400" height = "250">
+            Your browser doesn't support the HTML5 Canvas.
+          </canvas>
+          <canvas id = "bgCanvas" width = "400" height = "250">
             Your browser doesn't support the HTML5 Canvas.
           </canvas>
           <canvas id = "physicsCanvas" width = "400" height = "150">
@@ -45,7 +48,8 @@
       </div>
 
       <script type = "text/javascript">
-        var loadGame = new Game.screen(document.getElementById('gameCanvas'));
+        var loadGame = new Game.screen(document.getElementById('gameCanvas'),
+                                       document.getElementById('bgCanvas'));
       </script>
     </body>
 </html>
