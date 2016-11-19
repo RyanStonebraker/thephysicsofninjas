@@ -1,14 +1,11 @@
 // game.js
 // Ryan Stonebraker
 // Created: 10/13/2016
-// Last Updated: 11/17/2016
+// Last Updated: 11/19/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
-// TODO -add event listener, add bg Canvas
-// start game with a scaled out overview of map w/game controls - press space to
-// start and then game zooms in to sprite.
-// This could be done by drawing ninja on ninjacanvas and everything else on
-// bgcanvas and then using built in nCtx.scale(1,1) and bgCtx.scale(1,1)
+// TODO make line going to above target that has displacement to target shown
+// make physicspane
 
 var nCtx;
 var bgCtx;
@@ -111,11 +108,13 @@ screen.prototype.pseudoCamera = function (velocity, shiftX)
       {
         _building1.velocity.x = _building1.simVelocity.x;
         _building2.velocity.x = _building2.simVelocity.x;
+        _background.velocity.x = _background.simVelocity.x;
       }
       else
       {
         _building1.velocity.x = velocity + _building1.simVelocity.x;
         _building2.velocity.x = velocity + _building2.simVelocity.x;
+        _background.velocity.x = velocity/10 + _background.simVelocity.x;
       }
       break;
   }
@@ -123,16 +122,20 @@ screen.prototype.pseudoCamera = function (velocity, shiftX)
 
 if (game.level == 1)
 {
-var _building1 = new object("img/building1.svg", 467, 179);
+var _building1 = new object ("img/building1.svg", 467, 179);
 _building1.yPos = game.height - 150;
 _building1.xPos = -300;
 _building1.simX = _building1.xPos;
 _building1.name = "b1";
-var _building2 = new object("img/building1.svg", 467, 179);
-_building2.yPos = game.height - 50;
-_building2.xPos = 300;
+var _building2 = new object ("img/target.svg", 150, 300);
+_building2.yPos = game.height - 75;
+_building2.xPos = 500;
 _building2.simX = _building2.xPos;
 _building2.name = "b2";
+var _background = new object ("img/BG.svg", 800, 400);
+_background.yPos = 0;
+_background.xPos = -50;
+_background.name = "bg";
 
 ninja.simX = 50;
 ninja.yPos = _building1.tY - ninja.height;
@@ -161,11 +164,13 @@ screen.prototype.arena1 = function ()
   var drawN = false;
   this.drawObject (_building1, -15, -15, drawN);
   this.drawObject (_building2, -15, -15, drawN);
+  this.drawObject (_background, 0, 0, drawBG);
 
   ninja.elasticity = 0.1;
   ninja.acceleration.y = 15;
   kinematic (_building1, game.fps);
   kinematic (_building2, game.fps);
+  kinematic (_background, game.fps);
 
   kinematic.prototype.detectCollision (ninja, _building1, game.fps);
   kinematic.prototype.detectCollision (ninja, _building2, game.fps);
