@@ -1,11 +1,13 @@
 // game.js
 // Ryan Stonebraker
 // Created: 10/13/2016
-// Last Updated: 11/19/2016
+// Last Updated: 11/20/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
-// TODO make line going to above target that has displacement to target shown
-// make physicspane
+// TODO make sim x position of target building a random value between a min/max
+// distance, make game stop if ninja goes below screen, make ninja appear to run,
+// if hits target, show you win, move on to next level, ALSO test acceleration
+// and velocity and how matches real physics
 
 var nCtx;
 var bgCtx;
@@ -62,7 +64,6 @@ function screen (ninjadiv, bgdiv)
 
   this.ninjaCanvas = ninjadiv;
   this.bgCanvas = bgdiv;
-  // TODO make background canvas
 
   ninjacanvas = this.ninjaCanvas;
   bgcanvas = this.bgCanvas;
@@ -77,8 +78,6 @@ function screen (ninjadiv, bgdiv)
 
   this.refresh ();
 
-  // TODO add keypress listener so that if key is held down, accelerate x
-  //window.addEventListener('keypress', this.keys.bind(this), true);
   window.addEventListener('keydown', this.keys.bind(this), true);
 }
 
@@ -132,6 +131,7 @@ _building2.yPos = game.height - 75;
 _building2.xPos = 500;
 _building2.simX = _building2.xPos;
 _building2.name = "b2";
+_building2.kineticFriction = 0.5;
 var _background = new object ("img/BG.svg", 800, 400);
 _background.yPos = 0;
 _background.xPos = -50;
@@ -163,8 +163,42 @@ screen.prototype.arena1 = function ()
   var drawBG = true;
   var drawN = false;
   this.drawObject (_building1, -15, -15, drawN);
-  this.drawObject (_building2, -15, -15, drawN);
+  this.drawObject (_building2, 0, -18, drawN);
   this.drawObject (_background, 0, 0, drawBG);
+
+  var scr2RX = _building2.xPos + _building2.width;
+  var scrNRX = ninja.xPos + ninja.width;
+  var xGap = 50;
+  if (scrNRX <= _building2.xPos -15 || ninja.xPos >= scr2RX)
+  {
+  var startLine = {x: ninja.xPos + ninja.width + xGap,
+                   y: ninja.yPos + ninja.height/2};
+
+  nCtx.fillStyle = "white";
+  nCtx.font = "15px Verdana";
+  if (ninja.xPos >= scr2RX)
+  {
+    startLine.x = ninja.xPos - xGap - 20;
+    var distance = (_building2.lX + _building2.width/2) - ninja.rX;
+    distance = Math.round(distance);
+    nCtx.fillText(distance + "m", ninja.xPos - 15 - xGap, ninja.yPos + ninja.height/2);
+  }
+  else
+  {
+    var distance = (_building2.lX + _building2.width/2) - ninja.rX;
+    distance = Math.round(distance)/10; // 10 px = 1 m
+    nCtx.fillText(distance + "m", scrNRX + 5, ninja.yPos + ninja.height/2);
+  }
+
+  var endLine = {x: _building2.xPos + _building2.width/2,
+                 y: _building2.yPos - 30};
+  nCtx.strokeStyle = "white";
+  nCtx.beginPath();
+  nCtx.moveTo(startLine.x,startLine.y);
+  nCtx.lineTo(endLine.x, endLine.y);
+  nCtx.lineWidth = 3;
+  nCtx.stroke();
+  }
 
   ninja.elasticity = 0.1;
   ninja.acceleration.y = 15;
@@ -179,7 +213,8 @@ screen.prototype.arena1 = function ()
 screen.prototype.refresh = function ()
 {
   var self = this;
-  setTimeout(function() {requestAnimationFrame(function(){self.refresh();})}, 1000/game.fps);
+  setTimeout(function() {requestAnimationFrame(function(){self.refresh();})},
+             1000/game.fps);
 
   nCtx.clearRect (0, 0, game.width, game.height);
   bgCtx.clearRect (0, 0, game.width, game.height);
@@ -207,6 +242,14 @@ screen.prototype.refresh = function ()
     this.pseudoCamera(-ninja.simVelocity.x);
   }
 
+  if (ninja.simVelocity.x > 0 && ninja.acceleration.x > 0)
+    ninja.acceleration.x -= 5;
+  else if (ninja.simVelocity.x < 0 && ninja.acceleration.x < 0) {
+    ninja.acceleration.x += 5;
+  }
+  if (Math.abs(ninja.simVelocity.x) <= 1)
+    ninja.acceleration.x = 0;
+
   this.drawObject(ninja, _ninja.offset.x, _ninja.offset.y);
   physpane();
 }
@@ -219,6 +262,7 @@ screen.prototype.keys = function (evt)
       if (ninja.contact)
       {
         ninja.simVelocity.x -= game.xKeySpeed;
+        ninja.acceleration.x = -5;
         if (ninja.xPos > game.width/2 - 150 && ninja.contact)
         {
           ninja.velocity.x = ninja.simVelocity.x;
@@ -229,6 +273,7 @@ screen.prototype.keys = function (evt)
     case key.right:
       if (ninja.contact)
       {
+        ninja.acceleration.x = 5;
         ninja.simVelocity.x += game.xKeySpeed;
         if (ninja.tR.x < game.width/2 + 150 && ninja.contact)
         {
