@@ -154,7 +154,7 @@ screen.prototype.arena1 = function (outcome)
     _building1.name = "b1";
 
     _building2.yPos = game.height - 75;
-    _building2.xPos = 500;
+    _building2.xPos = Math.random()*500 + 350;
     _building2.simX = _building2.xPos;
     _building2.simVelocity.x = 0;
     _building2.velocity.x = 0;
@@ -194,7 +194,6 @@ screen.prototype.arena1 = function (outcome)
     _building1.height *= game.bgScale;
     game.bgScaled = true;
   }
-
   var drawBG = true;
   var drawN = false;
   this.drawObject (_building1, -30, -15, drawN);
@@ -267,9 +266,11 @@ screen.prototype.arena1 = function (outcome)
   kinematic.prototype.detectCollision (ninja, _building1, game.fps);
   kinematic.prototype.detectCollision (ninja, _building2, game.fps);
 
+  var rndVelY = Math.round(ninja.velocity.y);
   if (ninja.yPos >= game.height)
     outcome.lose = true;
-  if (ninja.contact && ninja.contactSrc == "b2" && ninja.interact == 3)
+  if (ninja.contact && ninja.contactSrc == "b2" &&
+      ninja.interact == 3 && ninja.bY <= _building2.yPos && rndVelY == 0)
   {
     outcome.win = true;
     outcome.accuracy = (Math.abs((_building2.simX+_building2.width/2)/10-
@@ -367,7 +368,7 @@ screen.prototype.won = function(acc, thr)
   nCtx.fillStyle = "black";
   acc *= 10;
   var err = (acc/thr) * 100;
-  var dstOff = "Distance Off: " + Math.round(acc)/10 + "m  Percent Error: " +
+  var dstOff = "Distance Off: " + Math.round(acc)/100 + "m  Percent Error: " +
                Math.round(err)/100 + "%";
   var dstW = nCtx.measureText(dstOff).width;
   nCtx.fillText(dstOff, game.width/2 - dstW/2, game.height/2 + 20);
