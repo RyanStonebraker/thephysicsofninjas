@@ -276,7 +276,8 @@ screen.prototype.arena1 = function (outcome)
   // **End Line Drawing to Target**
 
   ninja.elasticity = 0.1;
-  ninja.acceleration.y = 15;
+  if (!game.complete)
+    ninja.acceleration.y = 15;
   kinematic (_building1, game.fps);
   kinematic (_building2, game.fps);
   kinematic (_background, game.fps);
@@ -287,6 +288,7 @@ screen.prototype.arena1 = function (outcome)
   var rndVelY = Math.round(ninja.velocity.y);
   if (ninja.yPos >= game.height)
     outcome.lose = true;
+
   if (ninja.contact && ninja.contactSrc == "b2" &&
       ninja.interact == 3 && ninja.bY <= _building2.yPos && rndVelY == 0)
   {
@@ -295,6 +297,18 @@ screen.prototype.arena1 = function (outcome)
                             (ninja.simX+ninja.width/2)/10));
     outcome.theoretical = _building2.simX + _building2.width/2;
   }
+
+    var relevantArena1 = {
+      "ninja" : ninja,
+      "target" : _building2,
+      "b1" : _building1,
+      "ninjaToTarget" : distance,
+      "numTicks" : animateNinja.numTicks,
+      "gmHt" : game.height,
+      "lives" : game.lives
+    }
+    
+    physpane(game.level, relevantArena1);
 }
 
 screen.prototype.displayLives = function (rLives)
@@ -381,8 +395,6 @@ screen.prototype.refresh = function ()
     if (animateNinja.numTicks % 50 == 0 && animateNinja.ticksPerFrame >= 2)
       --animateNinja.ticksPerFrame;
   }
-
-  physpane();
 }
 
 screen.prototype.won = function(acc, thr)
@@ -494,6 +506,9 @@ screen.prototype.lost = function ()
   ninja.simVelocity.x = 0;
   ninja.velocity.x = 0;
   ninja.acceleration.x = 0;
+  ninja.acceleration.y = 0;
+  ninja.velocity.y = 0;
+
 
   if (game.lives <= 0)
   {
@@ -543,6 +558,7 @@ screen.prototype.animateNinja = function (x, y)
 
   if (animateNinja.direction == "left")
   {
+    ninja.img.src = _ninja.img.leftRun;
     nCtx.drawImage(ninja.img,
               animateNinja.cTick * animateNinja.width,
               0,
@@ -558,6 +574,7 @@ screen.prototype.animateNinja = function (x, y)
   }
   else if (animateNinja.direction == "right")
   {
+    ninja.img.src = _ninja.img.rightRun;
     nCtx.drawImage(ninja.img,
               animateNinja.cTick * animateNinja.width,
               0,
@@ -582,8 +599,13 @@ screen.prototype.keys = function (evt)
       {
         if (animateNinja.direction != "left")
         {
-          animateNinja.direction = "left";
-          ninja.img.src = _ninja.img.leftRun;
+          if (ninja.simVelocity.x > 0)
+          {
+            animateNinja.direction = "none";
+            ninja.img.src = _ninja.img.std;
+          }
+          else
+            animateNinja.direction = "left";
         }
 
         ninja.simVelocity.x -= game.xKeySpeed;
@@ -600,8 +622,13 @@ screen.prototype.keys = function (evt)
       {
         if (animateNinja.direction != "right")
         {
-          animateNinja.direction = "right";
-          ninja.img.src = _ninja.img.rightRun;
+          if (ninja.simVelocity.x < 0)
+          {
+            animateNinja.direction = "none";
+            ninja.img.src = _ninja.img.std;
+          }
+          else
+            animateNinja.direction = "right";
         }
 
         ninja.acceleration.x = 5;
