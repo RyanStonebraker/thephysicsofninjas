@@ -1,6 +1,6 @@
 // physicspane.js
 // Ryan Stonebraker
-// 11/22/2016
+// 11/23/2016
 // Pane displaying relevant physics occuring onscreen
 
 var context;
@@ -22,9 +22,6 @@ function physpane (level, relevant)
   if (cvs.getContext)
   {
     context = cvs.getContext("2d");
-
-    var imageObj = new Image();
-    imageObj.src = 'img/exampleWood.jpg';
   }
   physpane.prototype.update_Physics(level, relevant);
 }
@@ -56,6 +53,10 @@ physpane.prototype.level1 = function(rel)
     var objective = "Objective: Reach the Target in " + rel.lives + " Try.";
   context.fillText(objective, tpX, tpY);
 
+  var eq = "Equations: X = Vit + 1/2at^2, Vf^2 = Vi^2 + 2aX"
+  tpY += htTxt;
+  context.fillText(eq, tpX, tpY);
+
   if (rel.ninjaToTarget)
     var dist = "Distance to Target: " + rel.ninjaToTarget + "m";
   else
@@ -71,20 +72,34 @@ physpane.prototype.level1 = function(rel)
     tpY += htTxt;
     context.fillText(nToE, tpX, tpY);
   }
-  var avgAccel = save.aI;
+  /*var avgAccel = save.aI;
   if (rel.numTicks % 100 == 0)
     avgAccel = (rel.ninja.acceleration.x/10 + save.aI)/2;
   if (rel.numTicks % 50 == 0)
     save.aI = rel.ninja.acceleration.x/10;
-  var accelN = "Ninja's Acceleration: " + avgAccel + "m/s^2";
+    */
+    // pseudo acceleration
+    if (rel.ninja.simVelocity.x > 1 && rel.ninja.contact)
+      var avgAccel = 0.5;
+    else if (rel.ninja.simVelocity.x < -1 && rel.ninja.contact)
+      var avgAccel = -0.5;
+    else if (Math.abs(rel.ninja.simVelocity.x) < 1)
+      var avgAccel = 0;
+  var accelN = "Ninja's X Acceleration: " + avgAccel + "m/s^2";
   tpY += htTxt;
   context.fillText(accelN, tpX, tpY);
+
+  var disYAccel = "Ninja's Y Acceleration: -" + rel.ninja.acceleration.y/10 + "m/s^2";
+  tpY += htTxt;
+  context.fillText(disYAccel, tpX, tpY);
 
   var nVelX = "Ninja's X Velocity: " + Math.round(rel.ninja.simVelocity.x)/10 + "m/s";
   tpY += htTxt;
   context.fillText(nVelX, tpX, tpY);
-
-  var nYHt = "Height: " + (Math.round(rel.gmHt - rel.ninja.yPos)/10 + 200) + "m";
-  tpY += htTxt;
-  context.fillText(nYHt, tpX, tpY);
+  if (rel.ninja.bY <= rel.target.yPos)
+  {
+    var nYHt = "Distance Above Target: " + Math.round(rel.target.yPos - rel.ninja.bY)/10 + "m";
+    tpY += htTxt;
+    context.fillText(nYHt, tpX, tpY);
+  }
 }

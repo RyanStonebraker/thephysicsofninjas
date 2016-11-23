@@ -1,7 +1,7 @@
 // kinematics.js
 // Ryan Stonebraker
 // Created 11/10/2016
-// Last Updated: 11/17/2016
+// Last Updated: 11/23/2016
 // kinematic functions integrated with game.js
 
 // "object" on screen for collision detection and sprites

@@ -1,13 +1,10 @@
 // game.js
 // Ryan Stonebraker
 // Created: 10/13/2016
-// Last Updated: 11/22/2016
+// Last Updated: 11/23/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
-// TODO make sim x position of target building a random value between a min/max
-// distance, make game stop if ninja goes below screen, make ninja appear to run,
-// if hits target, show you win, move on to next level, ALSO test acceleration
-// and velocity and how matches real physics
+// BUG Doesn't accelerate in the X direction when on surface correctly
 
 var nCtx;
 var bgCtx;
@@ -307,7 +304,7 @@ screen.prototype.arena1 = function (outcome)
       "gmHt" : game.height,
       "lives" : game.lives
     }
-    
+
     physpane(game.level, relevantArena1);
 }
 
