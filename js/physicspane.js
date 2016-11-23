@@ -83,7 +83,7 @@ physpane.prototype.level1 = function(rel)
       var avgAccel = 0.5;
     else if (rel.ninja.simVelocity.x < -1 && rel.ninja.contact)
       var avgAccel = -0.5;
-    else if (Math.abs(rel.ninja.simVelocity.x) < 1)
+    else
       var avgAccel = 0;
   var accelN = "Ninja's X Acceleration: " + avgAccel + "m/s^2";
   tpY += htTxt;

@@ -5,6 +5,8 @@
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
 // BUG Doesn't accelerate in the X direction when on surface correctly
+// possible solution: on building1 make ninja instantly stop when key not
+// pressed and then no kineticFriction
 
 var nCtx;
 var bgCtx;
