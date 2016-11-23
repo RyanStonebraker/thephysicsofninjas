@@ -44,6 +44,16 @@ var game = {
   }
 }
 
+var animateNinja = {
+  "numTicks" : 0,
+  "ticksPerFrame" : game.fps/10,
+  "cTick" : 0,
+  "numFrames" : 8,
+  "width" : 59,
+  "height" : 78,
+  "direction" : "none"
+}
+
 var key = {
   "up" : "W".charCodeAt(),
   "down" : "S".charCodeAt(),
@@ -57,7 +67,9 @@ window.Game = {};
 (function (){
 var _ninja = {
   img : {
-    std : "img/ninja.svg"
+    std : "img/ninja.svg",
+    leftRun : "img/ninjaRunSpriteSheetLeft.png",
+    rightRun : "img/ninjaRunSpriteSheet.png"
   },
   width : 35 * game.nScale,
   height : 78 * game.nScale,
@@ -68,7 +80,8 @@ var _ninja = {
   name : "ninja"
 }
 
-var ninja = new object (_ninja.img.std, _ninja.width, _ninja.height);
+var ninja = new object (_ninja.img.leftRun, _ninja.width, _ninja.height);
+ninja.name = _ninja.name;
 
 function screen (ninjadiv, bgdiv)
 {
@@ -101,7 +114,12 @@ screen.prototype.drawObject = function (obj, offsetX, offsetY, bg)
   if (!offsetY)
     offsetY = 0;
   if (!bg)
-    nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
+  {
+    if (obj.name != "ninja" || animateNinja.direction == "none")
+      nCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
+    else
+      this.animateNinja (obj.xPos + offsetX, obj.yPos + offsetY);
+  }
   else
     bgCtx.drawImage(obj.img, obj.xPos + offsetX, obj.yPos + offsetY);
 }
@@ -329,8 +347,15 @@ screen.prototype.refresh = function ()
   else if (ninja.simVelocity.x < 0 && ninja.acceleration.x < 0) {
     ninja.acceleration.x += 5;
   }
+
   if (Math.abs(ninja.simVelocity.x) <= 1)
     ninja.acceleration.x = 0;
+
+  if (Math.abs(ninja.simVelocity.x) < 0.5 || Math.abs(ninja.velocity.y) > 0.5)
+  {
+    animateNinja.direction = "none";
+    ninja.img.src = _ninja.img.std;
+  }
 
   this.drawObject(ninja, _ninja.offset.x, _ninja.offset.y);
 
@@ -343,6 +368,19 @@ screen.prototype.refresh = function ()
     this.won(game.outcome.accuracy, game.outcome.theoretical);
 
   this.displayLives(game.lives);
+
+  if (animateNinja.direction != "none")
+    ++animateNinja.numTicks;
+
+  if (Math.abs(ninja.simVelocity.x) < 30)
+  {
+    animateNinja.ticksPerFrame = game.fps/10;
+  }
+  else
+  {
+    if (animateNinja.numTicks % 50 == 0 && animateNinja.ticksPerFrame >= 2)
+      --animateNinja.ticksPerFrame;
+  }
 
   physpane();
 }
@@ -500,6 +538,41 @@ screen.prototype.lost = function ()
   }
 }
 
+screen.prototype.animateNinja = function (x, y)
+{
+
+  if (animateNinja.direction == "left")
+  {
+    nCtx.drawImage(ninja.img,
+              animateNinja.cTick * animateNinja.width,
+              0,
+              animateNinja.width,
+              animateNinja.height,
+              x,
+              y,
+              animateNinja.width,
+              animateNinja.height
+              );
+  if (animateNinja.numTicks % animateNinja.ticksPerFrame == 0)
+    animateNinja.cTick = (animateNinja.cTick+1)%(animateNinja.numFrames);
+  }
+  else if (animateNinja.direction == "right")
+  {
+    nCtx.drawImage(ninja.img,
+              animateNinja.cTick * animateNinja.width,
+              0,
+              animateNinja.width,
+              animateNinja.height,
+              x,
+              y,
+              animateNinja.width,
+              animateNinja.height
+              );
+  if (animateNinja.numTicks % animateNinja.ticksPerFrame == 0)
+    animateNinja.cTick = (animateNinja.cTick + 1) % (animateNinja.numFrames);
+  }
+}
+
 screen.prototype.keys = function (evt)
 {
   switch (evt.keyCode)
@@ -507,6 +580,12 @@ screen.prototype.keys = function (evt)
     case key.left:
       if (ninja.contact && !game.complete)
       {
+        if (animateNinja.direction != "left")
+        {
+          animateNinja.direction = "left";
+          ninja.img.src = _ninja.img.leftRun;
+        }
+
         ninja.simVelocity.x -= game.xKeySpeed;
         ninja.acceleration.x = -5;
         if (ninja.xPos > game.width/2 - 150 && ninja.contact)
@@ -519,6 +598,12 @@ screen.prototype.keys = function (evt)
     case key.right:
       if (ninja.contact && !game.complete)
       {
+        if (animateNinja.direction != "right")
+        {
+          animateNinja.direction = "right";
+          ninja.img.src = _ninja.img.rightRun;
+        }
+
         ninja.acceleration.x = 5;
         ninja.simVelocity.x += game.xKeySpeed;
         if (ninja.tR.x < game.width/2 + 150 && ninja.contact)
@@ -531,6 +616,12 @@ screen.prototype.keys = function (evt)
     case key.space:
       if (!game.complete)
       {
+        if (animateNinja.direction != "none")
+        {
+          animateNinja.direction = "none";
+          ninja.img.src = _ninja.img.std;
+        }
+
         if (game.spacePressed == 0 && ninja.contact && ninja.interact == 3)
         {
           game.initialContact = true;
