@@ -73,18 +73,19 @@ physpane.prototype.level1 = function(rel)
     context.fillText(nToE, tpX, tpY);
   }
   /*var avgAccel = save.aI;
-  if (rel.numTicks % 100 == 0)
+  if (rel.numTicks % 10 == 0)
     avgAccel = (rel.ninja.acceleration.x/10 + save.aI)/2;
-  if (rel.numTicks % 50 == 0)
+  if (rel.numTicks % 5 == 0)
     save.aI = rel.ninja.acceleration.x/10;
     */
+  if (rel.ninja.acceleration.x > 0.5)
+    var avgAccel = rel.keyAcc/10;
+  else if (rel.ninja.acceleration.x < -0.5)
+    var avgAccel = -rel.keyAcc/10;
+  else
+    var avgAccel = 0;
+
     // pseudo acceleration
-    if (rel.ninja.simVelocity.x > 1 && rel.ninja.contact)
-      var avgAccel = 0.5;
-    else if (rel.ninja.simVelocity.x < -1 && rel.ninja.contact)
-      var avgAccel = -0.5;
-    else
-      var avgAccel = 0;
   var accelN = "Ninja's X Acceleration: " + avgAccel + "m/s^2";
   tpY += htTxt;
   context.fillText(accelN, tpX, tpY);

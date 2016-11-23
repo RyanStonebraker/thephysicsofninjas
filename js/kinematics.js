@@ -146,9 +146,9 @@ kinematic.prototype.detectCollision = function (obj1, obj2, fps)
   var bY2 = obj2.bY;
 
   // no rotation bounds
-  var rightSide = (rX1 + mrgn >= lX2 && rX1 - mrgn <= rX2);
+  var rightSide = (rX1 - mrgn >= lX2 && rX1 + mrgn <= rX2);
   var top = (tY1 - mrgn <= bY2 && tY1 + mrgn >= tY2);
-  var leftSide = (lX1 - mrgn <= rX2 && lX1 + mrgn >= lX2);
+  var leftSide = (lX1 + mrgn <= rX2 && lX1 - mrgn >= lX2);
   var bottom = (bY1 + mrgn >= tY2 && bY1 - mrgn <= bY2);
 
   var sideGap = 5;
@@ -215,8 +215,8 @@ kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
   }
   else if (side == 3)
   {
-    obj1.velocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
-    obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+    //obj1.velocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
+    //obj1.simVelocity.x -= obj1.simVelocity.x * obj2.kineticFriction;
   }
   else if (side == 2)
   {

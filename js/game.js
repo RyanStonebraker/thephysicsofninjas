@@ -4,10 +4,6 @@
 // Last Updated: 11/23/2016
 // A Ninja performs simple physics in an interactive physics-demonstrating game.
 
-// BUG Doesn't accelerate in the X direction when on surface correctly
-// possible solution: on building1 make ninja instantly stop when key not
-// pressed and then no kineticFriction
-
 var nCtx;
 var bgCtx;
 var ninjacanvas;
@@ -32,6 +28,9 @@ var game = {
   "bgScale" : 1,
   "nScaled" : false,
   "bgScaled" : false,
+  "keyCount" : 0,
+  "prevKeyCount" : 0,
+  "numRefresh" : 0,
   outcome : {
     "win" : false,
     "lose" : false,
@@ -58,7 +57,8 @@ var key = {
   "down" : "S".charCodeAt(),
   "left" : "A".charCodeAt(),
   "right" : "D".charCodeAt(),
-  "space" : " ".charCodeAt()
+  "space" : " ".charCodeAt(),
+  "accelerate" : Math.round(Math.random()*4 + 2)
 }
 
 window.Game = {};
@@ -168,6 +168,7 @@ screen.prototype.arena1 = function (outcome)
     _building1.simVelocity.x = 0;
     _building1.velocity.x = 0;
     _building1.velocity.y = 0;
+    _building1.kineticFriction = 0;
     _building1.name = "b1";
 
     _building2.yPos = game.height - 75;
@@ -176,7 +177,7 @@ screen.prototype.arena1 = function (outcome)
     _building2.simVelocity.x = 0;
     _building2.velocity.x = 0;
     _building2.velocity.y = 0;
-    _building2.kineticFriction = 0.5;
+    _building2.kineticFriction = 0.7;
     _building2.name = "b2";
 
     _background.yPos = 0;
@@ -192,6 +193,8 @@ screen.prototype.arena1 = function (outcome)
     ninja.velocity.x = 0;
     ninja.simVelocity.x = 0;
     ninja.velocity.y = 0;
+
+    key.accelerate = Math.round(Math.random()*40 + 20);
 
     // only execute once
     game.reset.arena1 = false;
@@ -304,7 +307,14 @@ screen.prototype.arena1 = function (outcome)
       "ninjaToTarget" : distance,
       "numTicks" : animateNinja.numTicks,
       "gmHt" : game.height,
-      "lives" : game.lives
+      "lives" : game.lives,
+      "keyAcc" : key.accelerate
+    }
+
+    if (ninja.bY > _building2.tY)
+    {
+      ninja.interact = 0;
+      ninja.velocity.y += 5;
     }
 
     physpane(game.level, relevantArena1);
@@ -355,12 +365,6 @@ screen.prototype.refresh = function ()
     this.pseudoCamera(-ninja.simVelocity.x);
   }
 
-  if (ninja.simVelocity.x > 0 && ninja.acceleration.x > 0)
-    ninja.acceleration.x -= 5;
-  else if (ninja.simVelocity.x < 0 && ninja.acceleration.x < 0) {
-    ninja.acceleration.x += 5;
-  }
-
   if (Math.abs(ninja.simVelocity.x) <= 1)
     ninja.acceleration.x = 0;
 
@@ -394,6 +398,20 @@ screen.prototype.refresh = function ()
     if (animateNinja.numTicks % 50 == 0 && animateNinja.ticksPerFrame >= 2)
       --animateNinja.ticksPerFrame;
   }
+
+  // make ninja instantly stop on building 1 ****
+  ++game.numRefresh;
+  if (game.prevKeyCount == game.keyCount && game.numRefresh % 5 == 0 && ninja.contact && ninja.contactSrc == "b1")
+  {
+    ninja.acceleration.x = 0;
+    ninja.simVelocity.x = 0;
+    ninja.velocity.x = 0;
+  }
+  else if (!ninja.contact)
+    ninja.acceleration.x = 0;
+  if (game.numRefresh % 5 == 0)
+    game.prevKeyCount = game.keyCount;
+  // ****
 }
 
 screen.prototype.won = function(acc, thr)
@@ -607,8 +625,9 @@ screen.prototype.keys = function (evt)
             animateNinja.direction = "left";
         }
 
-        ninja.simVelocity.x -= game.xKeySpeed;
-        ninja.acceleration.x = -5;
+        //ninja.simVelocity.x -= game.xKeySpeed;
+        ++game.keyCount;
+        ninja.acceleration.x = -key.accelerate;
         if (ninja.xPos > game.width/2 - 150 && ninja.contact)
         {
           ninja.velocity.x = ninja.simVelocity.x;
@@ -630,8 +649,9 @@ screen.prototype.keys = function (evt)
             animateNinja.direction = "right";
         }
 
-        ninja.acceleration.x = 5;
-        ninja.simVelocity.x += game.xKeySpeed;
+        ninja.acceleration.x = key.accelerate;
+        ++game.keyCount;
+        //ninja.simVelocity.x += game.xKeySpeed;
         if (ninja.tR.x < game.width/2 + 150 && ninja.contact)
         {
           ninja.velocity.x = ninja.simVelocity.x;
