@@ -134,17 +134,7 @@ kinematic.prototype.detectCollision = function (obj1, obj2, fps)
 {
   var _perUpdate = fps/1000;
   var mrgn = 0.5; // compensate for slight inaccuracies in computer calculations
-/*
-  var lX1 = obj1.simX;
-  var rX1 = obj1.simX + obj1.width;
-  var tY1 = obj1.yPos;
-  var bY1 = obj1.yPos + obj1.height;
 
-  var lX2 = obj2.simX;
-  var rX2 = obj2.simX + obj2.width;
-  var tY2 = obj2.yPos;
-  var bY2 = obj2.yPos + obj2.height;
-*/
   var lX1 = obj1.lX;
   var rX1 = obj1.rX;
   var tY1 = obj1.tY;
@@ -244,5 +234,6 @@ kinematic.prototype.conserveMomentum = function (obj1, obj2, _perUpdate)
   }
 
   obj1.contact = true;
-  obj1.acceleration.y -= obj1.acceleration.y;
+  if (obj1.name != "ball")
+    obj1.acceleration.y -= obj1.acceleration.y;
 }

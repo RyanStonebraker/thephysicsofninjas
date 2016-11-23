@@ -85,15 +85,49 @@ h1 {
   margin-left: auto;
   margin-right: auto;
   line-height: 5px;
-  width: fit-content;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
+  width: 400px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.wrapAround {
+  word-wrap: break-word;
+  white-space: -moz-pre-wrap;
+  white-space: pre-wrap;
+}
+
+#intro {
+  font-size: 15px;
+  margin-top: 5px;
+  border: 1px solid black;
+  margin-left: auto;
+  margin-right: auto;
+  width: 500px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#srcs {
+  font-size: 15px;
+  margin-top: 5px;
+  border: 1px solid black;
+  margin-left: auto;
+  margin-right: auto;
+  width: 500px;
   padding-left: 5px;
   padding-right: 5px;
 }
 
 h2 {
   font-family: cursive;
+  text-align: center;
+  text-decoration: underline;
+}
+
+h3 {
+  font-family: Verdana;
+  font-size: 20px;
+  font-weight: bold;
   text-align: center;
   text-decoration: underline;
 }
@@ -139,4 +173,35 @@ p {
 
 .tabButton:active {
   color: white;
+}
+
+.nrmLink {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.nrmLink:link {
+  color: black;
+  font-style: normal;
+  font
+}
+.nrmLink:visited {
+  color: black;
+}
+
+.nrmLink:hover {
+  color:darkgray;
+  font-weight:lighter;
+}
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#testEng {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
