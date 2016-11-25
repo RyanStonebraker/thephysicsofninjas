@@ -39,7 +39,8 @@ var game = {
   },
   reset : {
     arena1 : true
-  }
+  },
+  "showAns" : false
 }
 
 var animateNinja = {
@@ -58,6 +59,7 @@ var key = {
   "left" : "A".charCodeAt(),
   "right" : "D".charCodeAt(),
   "space" : " ".charCodeAt(),
+  "special" : "E".charCodeAt(),
   "accelerate" : Math.round(Math.random()*4 + 2)
 }
 
@@ -171,7 +173,7 @@ screen.prototype.arena1 = function (outcome)
     _building1.kineticFriction = 0;
     _building1.name = "b1";
 
-    _building2.yPos = game.height - 75;
+    _building2.yPos = game.height - (60 + Math.random()*20);
     _building2.xPos = Math.random()*500 + 350;
     _building2.simX = _building2.xPos;
     _building2.simVelocity.x = 0;
@@ -195,6 +197,7 @@ screen.prototype.arena1 = function (outcome)
     ninja.velocity.y = 0;
 
     key.accelerate = Math.round(Math.random()*40 + 20);
+    game.showAns = false;
 
     // only execute once
     game.reset.arena1 = false;
@@ -308,7 +311,8 @@ screen.prototype.arena1 = function (outcome)
       "numTicks" : animateNinja.numTicks,
       "gmHt" : game.height,
       "lives" : game.lives,
-      "keyAcc" : key.accelerate
+      "keyAcc" : key.accelerate,
+      "showAns" : game.showAns
     }
 
     if (ninja.bY > _building2.tY)
@@ -685,6 +689,9 @@ screen.prototype.keys = function (evt)
           game.continue = true;
       }
       evt.preventDefault();
+      break;
+    case key.special:
+      game.showAns = true;
       break;
   }
 }

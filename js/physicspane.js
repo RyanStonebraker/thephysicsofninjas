@@ -86,21 +86,34 @@ physpane.prototype.level1 = function(rel)
     var avgAccel = 0;
 
     // pseudo acceleration
-  var accelN = "Ninja's X Acceleration: " + avgAccel + "m/s^2";
+  var accelN = "Ninja's X, Y Acceleration: " + avgAccel + "m/s^2";
+  accelN += ", " + -rel.ninja.acceleration.y/10 + "m/s^2";
   tpY += htTxt;
   context.fillText(accelN, tpX, tpY);
 
-  var disYAccel = "Ninja's Y Acceleration: -" + rel.ninja.acceleration.y/10 + "m/s^2";
+  var nVel = "Ninja's X,Y Velocity: " + Math.round(rel.ninja.simVelocity.x)/10 + "m/s";
+  nVel += ", " + -Math.round(rel.ninja.velocity.y)/10 + "m/s";
   tpY += htTxt;
-  context.fillText(disYAccel, tpX, tpY);
+  context.fillText(nVel, tpX, tpY);
 
-  var nVelX = "Ninja's X Velocity: " + Math.round(rel.ninja.simVelocity.x)/10 + "m/s";
-  tpY += htTxt;
-  context.fillText(nVelX, tpX, tpY);
+  var htAbove = Math.round(rel.target.yPos - rel.ninja.bY)/10;
   if (rel.ninja.bY <= rel.target.yPos)
   {
-    var nYHt = "Distance Above Target: " + Math.round(rel.target.yPos - rel.ninja.bY)/10 + "m";
+    var nYHt = "Distance Above Target: " + htAbove + "m";
     tpY += htTxt;
     context.fillText(nYHt, tpX, tpY);
+  }
+  if (rel.showAns && rel.ninja.lX < rel.b1.rX)
+  {
+    // Vi = ? X = Vit, t = sqrt(2Y/a) Vi = X/(sqrt(2Y/a)) Xe = (X/sqrt(2Y/ay))^2/2ax
+    bToB = (rel.target.lX - rel.b1.rX)/10;
+    var answer = "Answer (w/out jump): " + Math.round((Math.pow((bToB/Math.sqrt((2*htAbove)/1.5)), 2)/(2*rel.keyAcc)) * 100)/10 + "m from edge.";
+    tpY += htTxt;
+    context.fillText(answer, tpX, tpY);
+  }
+  else if (!rel.showAns && rel.ninja.lX < rel.b1.rX)
+  {
+    tpY += htTxt;
+    context.fillText("Press 'E' to show answer w/out jump.", tpX, tpY);
   }
 }
